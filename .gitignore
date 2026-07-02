@@ -1,0 +1,19 @@
+# Python
+venv/
+__pycache__/
+*.pyc
+*.pyo
+
+# SQL Server
+*.mdf
+*.ldf
+*.bak
+
+# Power BI
+*.pbix
+
+# VSC
+.vscode/
+
+# Source CSV files
+data/
