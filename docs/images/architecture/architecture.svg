@@ -1,0 +1,51 @@
+<svg width="100%" viewBox="0 0 720 480" role="img" xmlns="http://www.w3.org/2000/svg">
+<title>Architecture – ControlView Controlling Data Mart</title>
+<defs>
+  <marker id="cv-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+    <path d="M2 1L8 5L2 9" fill="none" stroke="#888" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+  </marker>
+</defs>
+
+<!-- Datengenerator -->
+<rect x="160" y="20" width="400" height="65" rx="8" fill="#4a4a4a" stroke="#666" stroke-width="0.5"/>
+<text x="360" y="35" text-anchor="middle" dominant-baseline="central" fill="#fff" font-size="13" font-weight="600" font-family="Segoe UI, sans-serif">Datengenerator</text>
+<text x="360" y="52" text-anchor="middle" dominant-baseline="central" fill="#ccc" font-size="11" font-family="Segoe UI, sans-serif">Controlling-Quelldaten (CSV)</text>
+<text x="360" y="68" text-anchor="middle" dominant-baseline="central" fill="#bbb" font-size="11" font-family="Segoe UI, sans-serif">Buchungsjournal · Kontenplan · Kostenstellen · Produktkatalog</text>
+
+<!-- Arrow → RAW -->
+<line x1="360" y1="85" x2="360" y2="106" stroke="#888" marker-end="url(#cv-arrow)" stroke-width="1.5"/>
+
+<!-- RAW -->
+<rect x="160" y="109" width="400" height="72" rx="10" fill="#5c3a1e" stroke="#a0622a" stroke-width="1"/>
+<text x="360" y="129" text-anchor="middle" dominant-baseline="central" fill="#e8b87a" font-size="14" font-weight="700" font-family="Segoe UI, sans-serif">Raw-Layer</text>
+<text x="360" y="150" text-anchor="middle" dominant-baseline="central" fill="#d4a060" font-size="11" font-family="Segoe UI, sans-serif">1:1-Abbild der Quelldateien · Keine Transformation</text>
+<text x="360" y="167" text-anchor="middle" dominant-baseline="central" fill="#d4a060" font-size="11" font-family="Segoe UI, sans-serif">BULK INSERT via Stored Procedures · 4 Entitäten</text>
+
+<!-- Arrow RAW → MART -->
+<line x1="360" y1="181" x2="360" y2="207" stroke="#888" marker-end="url(#cv-arrow)" stroke-width="1.5"/>
+
+<!-- MART -->
+<rect x="160" y="209" width="400" height="97" rx="10" fill="#5a4a1a" stroke="#d4af37" stroke-width="1"/>
+<text x="360" y="229" text-anchor="middle" dominant-baseline="central" fill="#ffd700" font-size="14" font-weight="700" font-family="Segoe UI, sans-serif">Data Mart</text>
+<text x="360" y="250" text-anchor="middle" dominant-baseline="central" fill="#f0c84a" font-size="11" font-family="Segoe UI, sans-serif">Star-Schema · 6 Dimensionen · 1 Faktentabelle · Surrogatschlüssel</text>
+<text x="360" y="267" text-anchor="middle" dominant-baseline="central" fill="#f0c84a" font-size="11" font-family="Segoe UI, sans-serif">Full Reload (TRUNCATE + INSERT)</text>
+<text x="360" y="284" text-anchor="middle" dominant-baseline="central" fill="#f0c84a" font-size="11" font-family="Segoe UI, sans-serif">Szenarien: Plan + Ist · 2022–2024</text>
+
+<!-- Arrow MART → Power BI -->
+<line x1="360" y1="306" x2="360" y2="332" stroke="#888" marker-end="url(#cv-arrow)" stroke-width="1.5"/>
+
+<!-- Power BI -->
+<rect x="160" y="334" width="400" height="72" rx="10" fill="#111e3a" stroke="#2251CC" stroke-width="1"/>
+<text x="360" y="354" text-anchor="middle" dominant-baseline="central" fill="#7FA8FF" font-size="14" font-weight="700" font-family="Segoe UI, sans-serif">Power BI Reporting</text>
+<text x="360" y="375" text-anchor="middle" dominant-baseline="central" fill="#AABFE8" font-size="11" font-family="Segoe UI, sans-serif">4-seitiges Controlling-Dashboard · Semantic Model</text>
+<text x="360" y="392" text-anchor="middle" dominant-baseline="central" fill="#AABFE8" font-size="11" font-family="Segoe UI, sans-serif">Übersicht · GuV-Analyse · Kostencontrolling · Produktmargen</text>
+
+<!-- Connector to foundation -->
+<line x1="360" y1="406" x2="360" y2="422" stroke="#666" stroke-width="0.5" stroke-dasharray="4 3"/>
+
+<!-- Foundation -->
+<rect x="160" y="424" width="400" height="46" rx="8" fill="#3d3d3d" stroke="#666" stroke-width="0.5"/>
+<text x="360" y="441" text-anchor="middle" dominant-baseline="central" fill="#bbb" font-size="11" font-weight="600" font-family="Segoe UI, sans-serif">MS SQL Server · T-SQL · SQL Server Agent</text>
+<text x="360" y="459" text-anchor="middle" dominant-baseline="central" fill="#bbb" font-size="11" font-weight="600" font-family="Segoe UI, sans-serif">Python · Power BI Desktop · DAX · Power Query (M)</text>
+
+</svg>

@@ -1,0 +1,58 @@
+<svg width="100%" viewBox="0 0 720 310" role="img" xmlns="http://www.w3.org/2000/svg">
+<title>GuV-Kaskade – ControlView Controlling Data Mart</title>
+
+<!-- Background -->
+<rect x="0" y="0" width="720" height="310" fill="#1e1e1e"/>
+
+<!-- Column headers -->
+<text x="60"  y="24" fill="#666" font-size="10" font-weight="600" font-family="Segoe UI, sans-serif">POSITION</text>
+<text x="530" y="24" fill="#666" font-size="10" font-weight="600" font-family="Segoe UI, sans-serif">KONTEN</text>
+
+<!-- Divider under header -->
+<line x1="40" y1="32" x2="680" y2="32" stroke="#333" stroke-width="1"/>
+
+<!-- ROW 1: Umsatz -->
+<text x="60"  y="58" fill="#d8d8d8" font-size="13" font-weight="700" font-family="Segoe UI, sans-serif">Umsatz</text>
+<text x="60"  y="74" fill="#888" font-size="10" font-family="Segoe UI, sans-serif">PRD-100 · PRD-200 · PRD-300 · PRD-400 · PRD-500</text>
+<text x="530" y="58" fill="#888" font-size="11" font-family="Segoe UI, sans-serif">4xxx</text>
+
+<!-- Thin divider -->
+<line x1="40" y1="84" x2="680" y2="84" stroke="#2a2a2a" stroke-width="1"/>
+
+<!-- ROW 2: Variable COGS -->
+<text x="44"  y="108" fill="#888" font-size="13" font-family="Segoe UI, sans-serif">−</text>
+<text x="60"  y="108" fill="#d8d8d8" font-size="13" font-weight="700" font-family="Segoe UI, sans-serif">Variable COGS</text>
+<text x="60"  y="124" fill="#888" font-size="10" font-family="Segoe UI, sans-serif">Wareneinsatz, Versand, Payment, Retouren · via Kostenträgerrechnung</text>
+<text x="530" y="108" fill="#888" font-size="11" font-family="Segoe UI, sans-serif">5xxx</text>
+
+<!-- Double line = Zwischenergebnis -->
+<line x1="40" y1="136" x2="680" y2="136" stroke="#3a3a3a" stroke-width="1"/>
+<line x1="40" y1="139" x2="680" y2="139" stroke="#3a3a3a" stroke-width="1"/>
+
+<!-- ROW 3: Deckungsbeitrag I -->
+<text x="44"  y="164" fill="#888" font-size="13" font-family="Segoe UI, sans-serif">=</text>
+<text x="60"  y="164" fill="#f0f0f0" font-size="13" font-weight="700" font-family="Segoe UI, sans-serif">Deckungsbeitrag I</text>
+<text x="60"  y="180" fill="#888" font-size="10" font-family="Segoe UI, sans-serif">pro Produkt auswertbar · Segment-Profitabilität</text>
+
+<!-- Thin divider -->
+<line x1="40" y1="192" x2="680" y2="192" stroke="#2a2a2a" stroke-width="1"/>
+
+<!-- ROW 4: OpEx -->
+<text x="44"  y="216" fill="#888" font-size="13" font-family="Segoe UI, sans-serif">−</text>
+<text x="60"  y="216" fill="#d8d8d8" font-size="13" font-weight="700" font-family="Segoe UI, sans-serif">OpEx</text>
+<text x="60"  y="232" fill="#888" font-size="10" font-family="Segoe UI, sans-serif">Personalkosten + Sachkosten · Gemeinkosten</text>
+<text x="530" y="216" fill="#888" font-size="11" font-family="Segoe UI, sans-serif">6xxx</text>
+
+<!-- Double line = Endergebnis -->
+<line x1="40" y1="244" x2="680" y2="244" stroke="#3a3a3a" stroke-width="1"/>
+<line x1="40" y1="247" x2="680" y2="247" stroke="#3a3a3a" stroke-width="1"/>
+
+<!-- ROW 5: EBIT -->
+<text x="44"  y="274" fill="#888" font-size="13" font-family="Segoe UI, sans-serif">=</text>
+<text x="60"  y="274" fill="#d4af37" font-size="13" font-weight="700" font-family="Segoe UI, sans-serif">EBIT</text>
+<text x="60"  y="290" fill="#8a8058" font-size="10" font-family="Segoe UI, sans-serif">Operatives Ergebnis — Endpunkt des Controllings</text>
+
+<!-- Bottom border -->
+<line x1="40" y1="302" x2="680" y2="302" stroke="#333" stroke-width="1"/>
+
+</svg>
