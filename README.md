@@ -8,9 +8,9 @@ Modellierter Betrieb: Online-Händler für Consumer Electronics (~50 MA, ~32M EU
 
 ## Architektur
 
-Die Architektur folgt einem klassischen ELT-Ansatz mit drei Schichten: `raw`, `mart` und dem Power BI Semantic Model. Die Pipeline lädt die generierten Rohdaten unverändert in die `raw`-Schicht (1:1-Abbild der CSV-Quellen) und reichert sie beim Laden in die `mart`-Schicht mit Controlling-Logik an (GuV-Zuordnung inkl. Vorzeichenlogik, Kostenträgerrechnung, variable/fixe Kostenklassifizierung). Jeder Lauf baut den gesamten Datenbestand vollständig neu auf (Full Reload). Das daraus entstehende Star-Schema bildet die Datengrundlage für das Power BI Reporting, den Kern des Projekts.
-
 <img alt="Architecture" src="docs/images/architecture/architecture.svg" />
+
+Die Architektur folgt einem klassischen ELT-Ansatz mit drei Schichten: `raw`, `mart` und dem Power BI Semantic Model. Die Pipeline lädt die generierten Rohdaten unverändert in die `raw`-Schicht (1:1-Abbild der CSV-Quellen) und reichert sie beim Laden in die `mart`-Schicht mit Controlling-Logik an (GuV-Zuordnung inkl. Vorzeichenlogik, Kostenträgerrechnung, variable/fixe Kostenklassifizierung). Jeder Lauf baut den gesamten Datenbestand vollständig neu auf (Full Reload). Das daraus entstehende Star-Schema bildet die Datengrundlage für das Power BI Reporting, den Kern des Projekts.
 
 ---
 
