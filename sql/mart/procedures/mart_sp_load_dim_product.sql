@@ -6,18 +6,28 @@ AS
 BEGIN
     SET NOCOUNT ON;
 
-    DELETE FROM mart.dim_product;
+    BEGIN TRY
+        BEGIN TRANSACTION;
 
-    INSERT INTO mart.dim_product
-        (product_key, product_id, product_name, product_type, margin_class)
-    SELECT
-        ROW_NUMBER() OVER (ORDER BY p.produkt_id) AS product_key,
-        p.produkt_id,
-        p.produkt_bezeichnung,
-        p.produkt_typ,
-        p.margenklasse
-    FROM raw.produktkatalog p
-    ORDER BY p.produkt_id;
+        DELETE FROM mart.dim_product;
 
+        INSERT INTO mart.dim_product
+            (product_key, product_id, product_name, product_type, margin_class)
+        SELECT
+            ROW_NUMBER() OVER (ORDER BY p.produkt_id) AS product_key,
+            p.produkt_id,
+            p.produkt_bezeichnung,
+            p.produkt_typ,
+            p.margenklasse
+        FROM raw.produktkatalog p
+        ORDER BY p.produkt_id;
+
+        COMMIT TRANSACTION;
+    END TRY
+    BEGIN CATCH
+        IF @@TRANCOUNT > 0
+            ROLLBACK TRANSACTION;
+        THROW;
+    END CATCH
 END;
 GO

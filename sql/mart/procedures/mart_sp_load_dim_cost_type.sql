@@ -7,12 +7,22 @@ AS
 BEGIN
     SET NOCOUNT ON;
 
-    DELETE FROM mart.dim_cost_type;
+    BEGIN TRY
+        BEGIN TRANSACTION;
 
-    INSERT INTO mart.dim_cost_type (cost_type_key, cost_type_id, cost_type_label, cost_type_order)
-    VALUES
-        (1, 'variabel', 'Variable Kosten', 1),
-        (2, 'fix',      'Fixkosten',       2);
+        DELETE FROM mart.dim_cost_type;
 
+        INSERT INTO mart.dim_cost_type (cost_type_key, cost_type_id, cost_type_label, cost_type_order)
+        VALUES
+            (1, 'variabel', 'Variable Kosten', 1),
+            (2, 'fix',      'Fixkosten',       2);
+
+        COMMIT TRANSACTION;
+    END TRY
+    BEGIN CATCH
+        IF @@TRANCOUNT > 0
+            ROLLBACK TRANSACTION;
+        THROW;
+    END CATCH
 END;
 GO

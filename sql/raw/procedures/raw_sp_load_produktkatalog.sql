@@ -6,20 +6,31 @@ AS
 BEGIN
     SET NOCOUNT ON;
 
-    TRUNCATE TABLE raw.produktkatalog;
+    BEGIN TRY
+        BEGIN TRANSACTION;
 
-    DECLARE @sql NVARCHAR(MAX) =
-        N'BULK INSERT raw.produktkatalog'
-        + N' FROM '''        + REPLACE(@DataPath, N'''', N'''''') + N'\produktkatalog.csv'''
-        + N' WITH ('
-        +     N'FORMAT          = ''CSV'','
-        +     N'FIRSTROW        = 2,'
-        +     N'FIELDTERMINATOR = '','','
-        +     N'ROWTERMINATOR   = ''\n'','
-        +     N'CODEPAGE        = ''65001'','
-        +     N'TABLOCK'
-        + N')';
+        TRUNCATE TABLE raw.produktkatalog;
 
-    EXEC sp_executesql @sql;
+        DECLARE @sql NVARCHAR(MAX) =
+            N'BULK INSERT raw.produktkatalog'
+            + N' FROM '''        + REPLACE(@DataPath, N'''', N'''''') + N'\produktkatalog.csv'''
+            + N' WITH ('
+            +     N'FORMAT          = ''CSV'','
+            +     N'FIRSTROW        = 2,'
+            +     N'FIELDTERMINATOR = '','','
+            +     N'ROWTERMINATOR   = ''\n'','
+            +     N'CODEPAGE        = ''65001'','
+            +     N'TABLOCK'
+            + N')';
+
+        EXEC sp_executesql @sql;
+
+        COMMIT TRANSACTION;
+    END TRY
+    BEGIN CATCH
+        IF @@TRANCOUNT > 0
+            ROLLBACK TRANSACTION;
+        THROW;
+    END CATCH
 END;
 GO

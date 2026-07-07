@@ -12,27 +12,38 @@ AS
 BEGIN
     SET NOCOUNT ON;
 
-    -- Raw: Quelldaten laden
-    EXEC raw.sp_load_kontenplan      @DataPath = @DataPath;
-    EXEC raw.sp_load_kostenstellen   @DataPath = @DataPath;
-    EXEC raw.sp_load_produktkatalog  @DataPath = @DataPath;
-    EXEC raw.sp_load_buchungsjournal @DataPath = @DataPath;
+    BEGIN TRY
+        BEGIN TRANSACTION;
 
-    -- Fact zuerst leeren damit Dim-DELETEs nicht an FK-Constraints scheitern
-    TRUNCATE TABLE mart.fact_journal;
+        -- Raw: Quelldaten laden
+        EXEC raw.sp_load_kontenplan      @DataPath = @DataPath;
+        EXEC raw.sp_load_kostenstellen   @DataPath = @DataPath;
+        EXEC raw.sp_load_produktkatalog  @DataPath = @DataPath;
+        EXEC raw.sp_load_buchungsjournal @DataPath = @DataPath;
 
-    -- Mart: Dimensionen aufbauen
-    EXEC mart.sp_load_dim_account;
-    EXEC mart.sp_load_dim_costcenter;
-    EXEC mart.sp_load_dim_product;
-    EXEC mart.sp_load_dim_date;
-    EXEC mart.sp_load_dim_scenario;
-    EXEC mart.sp_load_dim_cost_type;
+        -- Fact zuerst leeren damit Dim-DELETEs nicht an FK-Constraints scheitern
+        TRUNCATE TABLE mart.fact_journal;
 
-    -- Mart: Faktentabelle aufbauen
-    EXEC mart.sp_load_fact_journal;
+        -- Mart: Dimensionen aufbauen
+        EXEC mart.sp_load_dim_account;
+        EXEC mart.sp_load_dim_costcenter;
+        EXEC mart.sp_load_dim_product;
+        EXEC mart.sp_load_dim_date;
+        EXEC mart.sp_load_dim_scenario;
+        EXEC mart.sp_load_dim_cost_type;
 
-    -- Verifikation
+        -- Mart: Faktentabelle aufbauen
+        EXEC mart.sp_load_fact_journal;
+
+        COMMIT TRANSACTION;
+    END TRY
+    BEGIN CATCH
+        IF @@TRANCOUNT > 0
+            ROLLBACK TRANSACTION;
+        THROW;
+    END CATCH
+
+    -- Verifikation (nur erreicht, wenn der gesamte Lauf committet wurde)
     SELECT 'buchungsjournal' AS [table], COUNT(*) AS [rows] FROM raw.buchungsjournal
     UNION ALL SELECT 'dim_date',       COUNT(*) FROM mart.dim_date
     UNION ALL SELECT 'dim_account',    COUNT(*) FROM mart.dim_account

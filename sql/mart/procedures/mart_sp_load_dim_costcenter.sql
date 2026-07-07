@@ -7,18 +7,28 @@ AS
 BEGIN
     SET NOCOUNT ON;
 
-    DELETE FROM mart.dim_costcenter;
+    BEGIN TRY
+        BEGIN TRANSACTION;
 
-    INSERT INTO mart.dim_costcenter
-        (costcenter_key, costcenter_id, costcenter_name, area, cost_owner_id)
-    SELECT
-        ROW_NUMBER() OVER (ORDER BY k.kostenstelle_id) AS costcenter_key,
-        k.kostenstelle_id,
-        k.kostenstelle_bezeichnung,
-        k.bereich,
-        k.cost_owner_id
-    FROM raw.kostenstellen k
-    ORDER BY k.kostenstelle_id;
+        DELETE FROM mart.dim_costcenter;
 
+        INSERT INTO mart.dim_costcenter
+            (costcenter_key, costcenter_id, costcenter_name, area, cost_owner_id)
+        SELECT
+            ROW_NUMBER() OVER (ORDER BY k.kostenstelle_id) AS costcenter_key,
+            k.kostenstelle_id,
+            k.kostenstelle_bezeichnung,
+            k.bereich,
+            k.cost_owner_id
+        FROM raw.kostenstellen k
+        ORDER BY k.kostenstelle_id;
+
+        COMMIT TRANSACTION;
+    END TRY
+    BEGIN CATCH
+        IF @@TRANCOUNT > 0
+            ROLLBACK TRANSACTION;
+        THROW;
+    END CATCH
 END;
 GO
