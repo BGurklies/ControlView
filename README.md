@@ -67,6 +67,8 @@ Die Kaskade zeigt den Weg vom Umsatz zum operativen Ergebnis in zwei Stufen. Der
 
 ## Data Mart: Star-Schema
 
+Der Mart-Layer bildet das auswertungsbereite Datenmodell: ein Star Schema mit 6 Dimensionen und einer Faktentabelle, das direkt als Datenquelle für das Power BI Dashboard dient.
+
 ```mermaid
 erDiagram
     dim_date {
@@ -168,6 +170,8 @@ Vier Reporting-Seiten decken die klassischen Controlling-Perspektiven ab: Execut
 ### Seite 4: Produktmargen
 
 *In Arbeit.* Geplant: Deckungsbeitrag I je Warengruppe im Ist-Plan-Vergleich, inklusive Margenentwicklung über die Zeit.
+
+DAX Measures: [`powerbi/te_create_measures.csx`](powerbi/te_create_measures.csx)
 
 ---
 
