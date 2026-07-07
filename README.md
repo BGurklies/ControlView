@@ -1,8 +1,10 @@
 # ControlView
 
-Controlling-Dashboard für einen modellierten mittelständischen Online-Händler: von der Rohdatengenerierung nach realen Buchhaltungsstandards über einen SQL Server Controlling Data Mart bis zum Power BI Reporting.
+ControlView ist ein Controlling-Dashboard für einen modellierten mittelständischen Online-Händler: von der Rohdatengenerierung nach realen Buchhaltungsstandards über einen SQL Server Controlling Data Mart bis zum Power BI Reporting.
 
-Modellierter Betrieb: Online-Händler für Consumer Electronics (~50 MA, ~32M EUR Umsatz, eigener Shop + Marktplätze). Das Dashboard bildet die vollständige operative GuV-Kaskade ab, von Umsatz über Deckungsbeitrag I bis EBIT, aufgeteilt auf vier Reporting-Seiten: Übersicht, GuV-Analyse, Kostencontrolling und Produktmargen.
+Modelliert wird ein Online-Händler für Consumer Electronics (~50 MA, ~32M EUR Umsatz), der seine Produkte über einen eigenen Shop sowie externe Marktplätze vertreibt.
+
+ Das Dashboard bildet die vollständige operative GuV-Kaskade ab, von Umsatz über Deckungsbeitrag I bis EBIT, aufgeteilt auf vier Reporting-Seiten: Übersicht, GuV-Analyse, Kostencontrolling und Produktmargen.
 
 ---
 
