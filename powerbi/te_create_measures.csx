@@ -1,4 +1,4 @@
-// Tabular Editor 2 — Erzeugt saemtliche DAX-Measures fuer das ControlView-Dashboard.
+// Tabular Editor 2 — Erzeugt alle DAX-Measures fuer das ControlView-Dashboard.
 // Verwendung: Power BI Desktop mit dem Modell oeffnen, Tabular Editor ueber External Tools
 //             starten, dieses Skript in den C#-Script-Tab einfuegen, F5, dann Strg+S.
 //
