@@ -31,10 +31,9 @@ BEGIN
             ELSE                           'OpEx'
         END AS pl_line,
         CASE
-            WHEN k.konto_id LIKE '4%'                                      THEN 1
-            WHEN k.konto_id LIKE '5%'                                      THEN 2
-            WHEN k.konto_id IN ('6000','6010','6020','6030','6100','6200') THEN 3
-            ELSE                                                                4
+            WHEN k.konto_id LIKE '4%' THEN 1  -- Umsatz
+            WHEN k.konto_id LIKE '5%' THEN 2  -- COGS
+            ELSE                          3  -- OpEx (Personalkosten + Sachkosten)
         END AS pl_sort,
         CASE WHEN k.konto_id LIKE '4%' THEN 1 ELSE -1 END AS sign
     FROM raw.kontenplan k
