@@ -1,28 +1,34 @@
 """
-ControlView - Synthetischer Rohdaten-Generator
-Simuliert DATEV-Controlling-Extrakte und Stammdaten-Exporte eines SaaS-KMUs (~80 MA, ~6M EUR ARR).
+ControlView - Rohdaten-Generator
+
+Simuliert DATEV-Controlling-Extrakte und Stammdaten eines mittelstaendischen
+Online-Haendlers fuer Consumer Electronics (~50 MA, ~32M EUR Umsatz, eigener Shop + Marktplaetze).
 
 Erzeugte Raw-CSVs (data/raw/):
   buchungsjournal.csv   : GL-Buchungen (Controlling-Extrakt, SKR04)
   kontenplan.csv        : Kontenstamm (SKR04-basiert)
-  kostenstellen.csv     : Kostenstellenstamm (1xx-9xx nach Funktionsbereich)
-  produktkatalog.csv    : Produktstamm (CRM/Billing-System)
+  kostenstellen.csv     : Kostenstellenstamm (nach Funktionsbereich)
+  produktkatalog.csv    : Produktstamm (Warengruppen)
 
 Dim- und Fact-Tabellen entstehen erst auf DB-Ebene via orchestration.sp_run_full_load.
 Produktzuordnung (DB I) erfolgt in mart.sp_load_fact_journal
 via mart.konto_produkt_mapping.
 
-Seasonalitaet:
-  Plan : flach (gleichmaessige Monatsverteilung des Jahresbudgets)
-  Ist  : Q4-lastig (Enterprise SaaS Budgetzyklen)
-         Erloes-Varianz: +/-13% (0.87-1.13 x plan_base), Kosten-Varianz: +/-4% (0.96-1.04 x plan_base)
+Deckungsbeitrag I je Warengruppe = Umsatz - variable Kosten (Wareneinsatz, Versand,
+Payment-Gebuehren, Retourenkosten). Geraete (Smartphones, Notebooks, Smart Home)
+tragen duenne bis mittlere Handelswaren-Margen; Zubehoer ist Eigenmarke und traegt
+die Marge (Profit-Engine).
+
+Saisonalitaet:
+  Plan : Q4-lastig (Weihnachtsgeschaeft), Fruehjahr/Sommer schwach (keine Geschenksaison)
+  Ist  : weicht vom saisonalen Plan durch Erloes-/Kosten-Schwankung und Jahr-Shape ab
+         Erloes-Varianz: +/-10% (0.90-1.10 x plan_base), Kosten-Varianz: +/-4% (0.96-1.04 x plan_base)
          Jahr-Shape: +/-5% pro Jahr/Monat
 
-Ist-Daten-Cutoff: September 2024 (ab Okt 2024 nur noch Plan-Daten)
+Wachstum: 2023 +7,0% ggue. Vorjahr, 2024 +7,5% ggue. Vorjahr
+(growth-Werte im Code sind Multiplikatoren auf die fixe 2022-Basis, kein Kettenwachstum)
 
-Wachstum (ARR YoY): 2022=1.00 / 2023=+15% / 2024=+28%
-
-Plan EBIT-Basis 2022: ~22% Marge (~109k/Mo EBIT auf ~495k/Mo Erlöse)
+Plan EBIT-Basis 2022: ~7% Marge (Details siehe base_plan in generate_buchungsjournal)
 """
 
 import logging
@@ -39,8 +45,6 @@ np.random.seed(SEED)
 OUTPUT_DIR = Path("data/raw")
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
-IST_CUTOFF = (2024, 9)  # einschließlich Sep 2024 — ab Okt 2024 nur noch Plan
-
 MONTH_NAMES_DE = {
     1: "Januar", 2: "Februar", 3: "Maerz", 4: "April",
     5: "Mai", 6: "Juni", 7: "Juli", 8: "August",
@@ -51,55 +55,55 @@ MONTH_NAMES_DE = {
 def generate_kontenplan():
     rows = [
         # Erloese (4xxx)
-        ("4000", "Lizenzerlöse (Subscription)",          "Erlös"),
-        ("4100", "Professional Services Erlöse",          "Erlös"),
-        ("4200", "Support & Wartungserlöse",              "Erlös"),
-        ("4300", "Consulting Erlöse",                     "Erlös"),
-        # COGS (5xxx)
-        ("5000", "Cloud-Infrastruktur & Hosting",         "Aufwand"),
-        ("5100", "Drittanbieter-Softwarelizenzen",        "Aufwand"),
-        ("5200", "Kosten Professional Services Delivery", "Aufwand"),
+        ("4000", "Umsatzerlöse Smartphones & Tablets",   "Erlös"),
+        ("4100", "Umsatzerlöse Notebooks & PC",          "Erlös"),
+        ("4200", "Umsatzerlöse Audio & Wearables",       "Erlös"),
+        ("4300", "Umsatzerlöse Zubehör",                 "Erlös"),
+        ("4400", "Umsatzerlöse Smart Home",              "Erlös"),
+        # COGS (5xxx) - variable Kosten je Warengruppe (Basis Deckungsbeitrag I)
+        ("5000", "Wareneinsatz Handelswaren",            "Aufwand"),
+        ("5100", "Versand & Fulfillment",                "Aufwand"),
+        ("5200", "Payment- & Transaktionsgebühren",      "Aufwand"),
+        ("5300", "Retourenkosten & Wertberichtigung",     "Aufwand"),
         # Personalkosten (6xxx)
-        ("6000", "Löhne Produktentwicklung",              "Aufwand"),
-        ("6010", "Löhne Vertrieb & Marketing",            "Aufwand"),
-        ("6020", "Löhne Customer Operations",             "Aufwand"),
-        ("6030", "Löhne Verwaltung & G&A",                "Aufwand"),
-        ("6100", "Sozialabgaben & Benefits",              "Aufwand"),
-        ("6200", "Betriebliche Altersvorsorge",           "Aufwand"),
+        ("6000", "Gehälter Einkauf & Category Management", "Aufwand"),
+        ("6010", "Gehälter Marketing & E-Commerce",      "Aufwand"),
+        ("6020", "Gehälter Kundenservice",               "Aufwand"),
+        ("6030", "Gehälter Verwaltung & Leitung",        "Aufwand"),
+        ("6100", "Sozialabgaben & Benefits",             "Aufwand"),
+        ("6200", "Betriebliche Altersvorsorge",          "Aufwand"),
         # Sachkosten (6xxx)
-        ("6300", "Performance Marketing & Werbung",       "Aufwand"),
-        ("6400", "Events & Messen",                       "Aufwand"),
-        ("6500", "Softwarelizenzen (intern)",              "Aufwand"),
-        ("6600", "Reisekosten",                           "Aufwand"),
-        ("6700", "Abschreibungen",                        "Aufwand"),
-        ("6800", "Sonstige Betriebskosten",               "Aufwand"),
+        ("6300", "Performance Marketing & Werbung",      "Aufwand"),
+        ("6400", "Software, Shop & Tools",               "Aufwand"),
+        ("6500", "Lager & Logistik",                     "Aufwand"),
+        ("6600", "IT & Zahlungsinfrastruktur",           "Aufwand"),
+        ("6700", "Abschreibungen",                       "Aufwand"),
+        ("6800", "Sonstige Betriebskosten",              "Aufwand"),
     ]
     return pd.DataFrame(rows, columns=["konto_id", "konto_bezeichnung", "konto_art"])
 
 
 def generate_kostenstellen():
     rows = [
-        # Kundengewinnung
-        ("KST-100", "Enterprise Vertrieb",        "Kundengewinnung",    "EMP-1041"),
-        ("KST-110", "Inside Sales & SMB",          "Kundengewinnung",    "EMP-1055"),
-        ("KST-120", "Partner & Channel",            "Kundengewinnung",    "EMP-1063"),
-        ("KST-200", "Marketing",                    "Kundengewinnung",    "EMP-1072"),
-        # Kundenbindung
-        ("KST-300", "Customer Success",             "Kundenbindung",      "EMP-2011"),
-        ("KST-310", "Onboarding & Implementierung", "Kundenbindung",      "EMP-2024"),
-        ("KST-320", "Professional Services",        "Kundenbindung",      "EMP-2038"),
-        # Produktentwicklung
-        ("KST-400", "Softwareentwicklung",          "Produktentwicklung", "EMP-3007"),
-        ("KST-410", "Produktmanagement",            "Produktentwicklung", "EMP-3019"),
-        ("KST-420", "QA & Testing",                 "Produktentwicklung", "EMP-3031"),
-        # Delivery
-        ("KST-500", "DevOps & Infrastruktur",       "Delivery",           "EMP-4005"),
-        ("KST-510", "Technical Operations",         "Delivery",           "EMP-4017"),
+        # Einkauf
+        ("KST-100", "Einkauf & Category Management",     "Einkauf",     "EMP-1041"),
+        ("KST-110", "Lieferanten & Disposition",         "Einkauf",     "EMP-1063"),
+        # Marketing
+        ("KST-200", "Performance Marketing",             "Marketing",   "EMP-2011"),
+        ("KST-210", "Content & Marktplätze",             "Marketing",   "EMP-2024"),
+        ("KST-220", "CRM & Retention",                   "Marketing",   "EMP-2035"),
+        # Service
+        ("KST-300", "Kundenservice",                     "Service",     "EMP-3007"),
+        ("KST-310", "Retouren & Reklamation",            "Service",     "EMP-3019"),
+        # Logistik
+        ("KST-400", "Lager & Kommissionierung",          "Logistik",    "EMP-4005"),
+        ("KST-410", "Versand & Fulfillment",             "Logistik",    "EMP-4017"),
+        ("KST-420", "Wareneingang",                      "Logistik",    "EMP-4028"),
         # Verwaltung
-        ("KST-600", "Finance & Controlling",        "Verwaltung",         "EMP-5002"),
-        ("KST-700", "People & Culture",             "Verwaltung",         "EMP-5014"),
-        ("KST-800", "IT & Security",                "Verwaltung",         "EMP-5023"),
-        ("KST-900", "Geschäftsführung",             "Verwaltung",         "EMP-5001"),
+        ("KST-500", "Finance & Controlling",             "Verwaltung",  "EMP-5002"),
+        ("KST-600", "People & Culture",                  "Verwaltung",  "EMP-5014"),
+        ("KST-700", "IT & Shop-Technik",                 "Verwaltung",  "EMP-5023"),
+        ("KST-900", "Geschäftsführung",                  "Verwaltung",  "EMP-5001"),
     ]
     return pd.DataFrame(rows, columns=[
         "kostenstelle_id", "kostenstelle_bezeichnung", "bereich", "cost_owner_id"
@@ -108,11 +112,12 @@ def generate_kostenstellen():
 
 def generate_produktkatalog():
     rows = [
-        ("SWS-100", "SaaS-Lizenzen",        "Subscription", "Kernprodukt"),
-        ("SWS-200", "Professional Services", "Services",     "Implementierung"),
-        ("SWS-300", "Support & Wartung",     "Subscription", "Wiederkehrend"),
-        ("SWS-400", "Consulting",            "Services",     "Beratung"),
-        ("SWS-900", "Gemeinkosten",          "Gemeinkosten", "n/a"),
+        ("PRD-100", "Smartphones & Tablets",   "Handelsware", "Volumen"),
+        ("PRD-200", "Notebooks & PC",          "Handelsware", "Volumen"),
+        ("PRD-300", "Audio & Wearables",       "Handelsware", "Standard"),
+        ("PRD-400", "Zubehör",                 "Eigenmarke",  "Hochmarge"),
+        ("PRD-500", "Smart Home",              "Handelsware", "Standard"),
+        ("PRD-900", "Gemeinkosten",            "Gemeinkosten", "n/a"),
     ]
     return pd.DataFrame(rows, columns=[
         "produkt_id", "produkt_bezeichnung", "produkt_typ", "margenklasse"
@@ -126,122 +131,140 @@ def generate_buchungsjournal():
     Betraege sind immer positiv.
 
     Jaehrliche Planwerte 2022 (base_plan-Eintraege sind Monatswerte, x 12):
-      Erloes Gesamt:  5.940.000 EUR  (~495k/Monat)
-      Kosten Gesamt:  4.632.000 EUR  (~386k/Monat)
-      EBIT:           1.308.000 EUR  (~109k/Monat, ~22% EBIT-Marge)
+      Umsatz Gesamt:  30.000.000 EUR  (~2.500k/Monat)
+      Kosten Gesamt:  27.900.000 EUR  (~2.325k/Monat)
+      EBIT:            2.100.000 EUR  (~175k/Monat, ~7% EBIT-Marge)
     """
 
     base_plan = {
-        # Erlöse (4xxx)
-        "4000": 330_000,   # Lizenzerlöse (Subscription)
-        "4100":  80_000,   # Professional Services Erlöse
-        "4200":  60_000,   # Support & Wartungserlöse
-        "4300":  25_000,   # Consulting Erlöse
-        # COGS (5xxx)
-        "5000":  45_000,   # Cloud-Infrastruktur & Hosting
-        "5100":  18_000,   # Drittanbieter-Softwarelizenzen
-        "5200":  52_000,   # Kosten Professional Services Delivery
+        # Erloese (4xxx)
+        "4000": 960_000,   # Smartphones & Tablets
+        "4100": 660_000,   # Notebooks & PC
+        "4200": 500_000,   # Audio & Wearables
+        "4300": 210_000,   # Zubehoer
+        "4400": 170_000,   # Smart Home
+        # COGS (5xxx) - variable Kosten (Basis DB I)
+        "5000": 1_820_000, # Wareneinsatz Handelswaren
+        "5100":  90_000,   # Versand & Fulfillment
+        "5200":  55_000,   # Payment- & Transaktionsgebuehren
+        "5300":  57_000,   # Retourenkosten & Wertberichtigung
         # Personalkosten (6xxx)
-        "6000":  72_000,   # Löhne Produktentwicklung
-        "6010":  40_000,   # Löhne Vertrieb & Marketing
-        "6020":  32_000,   # Löhne Customer Operations
-        "6030":  16_000,   # Löhne Verwaltung & G&A
-        "6100":  32_000,   # Sozialabgaben & Benefits
-        "6200":   7_000,   # Betriebliche Altersvorsorge
+        "6000":  40_000,   # Gehaelter Einkauf & Category Management
+        "6010":  46_000,   # Gehaelter Marketing & E-Commerce
+        "6020":  34_000,   # Gehaelter Kundenservice
+        "6030":  36_000,   # Gehaelter Verwaltung & Leitung
+        "6100":  40_000,   # Sozialabgaben & Benefits
+        "6200":   8_000,   # Betriebliche Altersvorsorge
         # Sachkosten (6xxx)
-        "6300":  28_000,   # Performance Marketing & Werbung
-        "6400":   9_000,   # Events & Messen
-        "6500":  15_000,   # Softwarelizenzen (intern)
-        "6600":   6_000,   # Reisekosten
-        "6700":  10_000,   # Abschreibungen
-        "6800":   4_000,   # Sonstige Betriebskosten
+        "6300":  48_000,   # Performance Marketing & Werbung
+        "6400":  12_000,   # Software, Shop & Tools
+        "6500":  20_000,   # Lager & Logistik
+        "6600":   8_000,   # IT & Zahlungsinfrastruktur
+        "6700":   6_000,   # Abschreibungen
+        "6800":   5_000,   # Sonstige Betriebskosten
     }
 
     # Konto -> Funktionsbereich (Zwischenstufe fuer KST-Verteilung via area_weights)
     account_area = {
-        "4000": "Kundengewinnung",
-        "4100": "Kundenbindung",
-        "4200": "Kundenbindung",
-        "4300": "Kundenbindung",
-        "5000": "Delivery",
-        "5100": "Delivery",
-        "5200": "Kundenbindung",
-        "6000": "Produktentwicklung",
-        "6010": "Kundengewinnung",
-        "6020": "Kundenbindung",
+        "4000": "Marketing",
+        "4100": "Marketing",
+        "4200": "Marketing",
+        "4300": "Marketing",
+        "4400": "Marketing",
+        "5000": "Einkauf",
+        "5100": "Logistik",
+        "5200": "Verwaltung",
+        "5300": "Service",
+        "6000": "Einkauf",
+        "6010": "Marketing",
+        "6020": "Service",
         "6030": "Verwaltung",
         "6100": "Verwaltung",
         "6200": "Verwaltung",
-        "6300": "Kundengewinnung",
-        "6400": "Kundengewinnung",
-        "6500": "Verwaltung",
-        "6600": "Kundengewinnung",
+        "6300": "Marketing",
+        "6400": "Verwaltung",
+        "6500": "Logistik",
+        "6600": "Verwaltung",
         "6700": "Verwaltung",
         "6800": "Verwaltung",
     }
 
     # Funktionsbereich -> KST-Gewichte (Summe je Bereich = 1.0)
     area_weights = {
-        "Kundengewinnung":    {"KST-100": 0.25, "KST-110": 0.30, "KST-120": 0.20, "KST-200": 0.25},
-        "Kundenbindung":      {"KST-300": 0.35, "KST-310": 0.35, "KST-320": 0.30},
-        "Produktentwicklung": {"KST-400": 0.60, "KST-410": 0.25, "KST-420": 0.15},
-        "Delivery":           {"KST-500": 0.65, "KST-510": 0.35},
-        "Verwaltung":         {"KST-600": 0.25, "KST-700": 0.25, "KST-800": 0.20, "KST-900": 0.30},
+        "Einkauf":    {"KST-100": 0.75, "KST-110": 0.25},
+        "Marketing":  {"KST-200": 0.50, "KST-210": 0.30, "KST-220": 0.20},
+        "Service":    {"KST-300": 0.65, "KST-310": 0.35},
+        "Logistik":   {"KST-400": 0.45, "KST-410": 0.35, "KST-420": 0.20},
+        "Verwaltung": {"KST-500": 0.30, "KST-600": 0.25, "KST-700": 0.20, "KST-900": 0.25},
     }
 
     # Konto -> Buchungstext (Freitextfeld im GL-Buchungssatz)
     buchungstext_map = {
-        "4000": "Lizenzerlöse",          "4100": "PS Erlöse",
-        "4200": "Support Erlöse",        "4300": "Consulting Erlöse",
-        "5000": "Cloud-Infrastruktur",   "5100": "Drittanbieter-SW-Lizenzen",
-        "5200": "PS Delivery Kosten",    "6000": "Löhne Produktentwicklung",
-        "6010": "Löhne Vertrieb",        "6020": "Löhne Customer Ops",
-        "6030": "Löhne Verwaltung",      "6100": "Sozialabgaben",
-        "6200": "Betriebliche AV",       "6300": "Performance Marketing",
-        "6400": "Events & Messen",       "6500": "SW-Lizenzen intern",
-        "6600": "Reisekosten",           "6700": "Abschreibungen",
+        "4000": "Erlöse Smartphones",
+        "4100": "Erlöse Notebooks",
+        "4200": "Erlöse Audio",
+        "4300": "Erlöse Zubehör",
+        "4400": "Erlöse Smart Home",
+        "5000": "Wareneinsatz",
+        "5100": "Versand & Fulfillment",
+        "5200": "Payment-Gebühren",
+        "5300": "Retourenkosten",
+        "6000": "Gehälter Einkauf",
+        "6010": "Gehälter Marketing",
+        "6020": "Gehälter Service",
+        "6030": "Gehälter Verwaltung",
+        "6100": "Sozialabgaben",
+        "6200": "Betriebliche AV",
+        "6300": "Performance Marketing",
+        "6400": "Software & Tools",
+        "6500": "Lager & Logistik",
+        "6600": "IT & Infrastruktur",
+        "6700": "Abschreibungen",
         "6800": "Sonstige Betriebskosten",
     }
 
-    # Q4-lastiger Umsatzverlauf (Enterprise SaaS Budgetzyklen); Jul Tief, Dez Max
+    # Konto -> Produktverteilung fuer Ist-Umsatz-/Kostenmix ist DB-relevant und
+    # wird erst in der DB (konto_produkt_mapping) aufgeloest; hier nur GL-Rohbuchung.
+
+    # E-Commerce-typischer Umsatzverlauf; Q4-Peak (Black Friday Nov, Weihnachten Dez)
     seasonality_revenue = {
-        1: 0.80,
-        2: 0.92,
-        3: 1.05,
-        4: 0.84,
-        5: 1.00,
-        6: 1.14,
-        7: 0.72,
-        8: 0.83,
-        9: 1.08,
-        10: 1.06,
-        11: 1.20,
-        12: 1.38,
-    }
-    # Kosten relativ flach, leicht Q4-erhoeht (Personalbonus, Marketing)
-    seasonality_cost = {
-        1: 0.96,
-        2: 0.96,
-        3: 1.00,
-        4: 0.98,
-        5: 1.00,
-        6: 1.02,
-        7: 0.90,
+        1: 0.88,
+        2: 0.82,
+        3: 0.90,
+        4: 0.90,
+        5: 0.95,
+        6: 0.92,
+        7: 0.88,
         8: 0.92,
         9: 1.00,
-        10: 1.02,
-        11: 1.05,
-        12: 1.10,
+        10: 1.08,
+        11: 1.48,
+        12: 1.27,
+    }
+    # Kosten folgen dem Umsatz gedaempft
+    seasonality_cost = {
+        1: 0.95,
+        2: 0.93,
+        3: 0.95,
+        4: 0.96,
+        5: 0.98,
+        6: 0.97,
+        7: 0.95,
+        8: 0.98,
+        9: 1.02,
+        10: 1.08,
+        11: 1.20,
+        12: 1.03,
     }
 
-    # per-year noise — verhindert identische Saisonkurven über Jahre
+    # per-year noise - verhindert identische Saisonkurven ueber Jahre
     year_shape = {
         y: {m: np.random.uniform(0.95, 1.05) for m in range(1, 13)}
         for y in [2022, 2023, 2024]
     }
 
-    # ARR-Wachstumsfaktor YoY (Multiplikator auf base_plan)
-    growth = {2022: 1.00, 2023: 1.15, 2024: 1.28}
+    # Umsatz-Wachstumsfaktor YoY (Multiplikator auf base_plan)
+    growth = {2022: 1.00, 2023: 1.07, 2024: 1.15}
 
     records = []
     belegnr_seq = {2022: 1, 2023: 1, 2024: 1}
@@ -257,27 +280,26 @@ def generate_buchungsjournal():
 
         for konto_id, base in base_plan.items():
             is_erloes = konto_id.startswith("4")
+            is_variabel = konto_id.startswith(("4", "5"))
             soll_haben = "H" if is_erloes else "S"
-            season = seasonality_revenue if is_erloes else seasonality_cost
+            # COGS (5xxx) ist variabel und skaliert mit dem Umsatzvolumen (seasonality_revenue);
+            # nur echte Fixkosten (6xxx) folgen der gedaempften seasonality_cost.
+            season = seasonality_revenue if is_variabel else seasonality_cost
             area   = account_area[konto_id]
             text   = f"{buchungstext_map[konto_id]} {monat_name} {year}"
 
-            plan_base = round(base * growth[year], 2)
+            plan_base = round(base * growth[year] * season[month], 2)
             if is_erloes:
-                variance = np.random.uniform(0.87, 1.13)   # ±13% Erloes-Varianz
+                variance = np.random.uniform(0.90, 1.10)   # +/-10% Erloes-Varianz
             else:
-                variance = np.random.uniform(0.96, 1.04)   # ±4% Kosten-Varianz
-            ist_base  = round(plan_base * season[month] * variance * year_shape[year][month], 2)
-
-            generate_ist = not (year > IST_CUTOFF[0] or (year == IST_CUTOFF[0] and month > IST_CUTOFF[1]))
+                variance = np.random.uniform(0.96, 1.04)   # +/-4% Kosten-Varianz
+            ist_base  = round(plan_base * variance * year_shape[year][month], 2)
 
             for kst_id, kst_weight in area_weights[area].items():
                 plan_betrag = round(plan_base * kst_weight, 2)
                 ist_betrag  = round(ist_base  * kst_weight, 2)
 
-                scenarios = [("Plan", plan_betrag)]
-                if generate_ist:
-                    scenarios.append(("Ist", ist_betrag))
+                scenarios = [("Plan", plan_betrag), ("Ist", ist_betrag)]
 
                 for szenario, betrag in scenarios:
                     belegnr = f"BLG-{year}-{belegnr_seq[year]:05d}"
@@ -298,10 +320,10 @@ def generate_buchungsjournal():
     return pd.DataFrame(records)
 
 
-def apply_ebit_floor(df, min_margin=0.05):
+def apply_ebit_floor(df, min_margin=0.02):
     """
     Stellt sicher dass kein Ist-Monat unter min_margin EBIT-Marge faellt.
-    Falls doch: Erlösbuchungen des Monats proportional hochskalieren bis Marge = min_margin.
+    Falls doch: Erloesbuchungen des Monats proportional hochskalieren bis Marge = min_margin.
     Kosten bleiben unveraendert; Saisonalitaet bleibt erhalten.
     """
     ist_mask = df["szenario"] == "Ist"
@@ -341,14 +363,15 @@ if __name__ == "__main__":
     log.info("produktkatalog.csv      %d rows", len(df_pk))
 
     df_bj = generate_buchungsjournal()
-    df_bj = apply_ebit_floor(df_bj, min_margin=0.05)
+    df_bj = apply_ebit_floor(df_bj, min_margin=0.02)
     df_bj.to_csv(OUTPUT_DIR / "buchungsjournal.csv", index=False)
     log.info("buchungsjournal.csv     %d rows", len(df_bj))
 
-    # Plausibilitaetspruefung Plan 2022
-    plan_2022     = df_bj[(df_bj["geschaeftsjahr"] == 2022) & (df_bj["szenario"] == "Plan")]
-    rev           = plan_2022[plan_2022["konto_id"].str.startswith("4")]["betrag"].sum()
-    all_costs     = plan_2022[plan_2022["konto_id"].str.startswith(("5", "6"))]["betrag"].sum()
-    ebit          = rev - all_costs
-    log.info("Plan 2022 — Umsatz: %s EUR | Kosten: %s EUR | EBIT: %s EUR (%.1f%%)",
-             f"{rev:,.0f}", f"{all_costs:,.0f}", f"{ebit:,.0f}", ebit / rev * 100)
+    # Plausibilitaetspruefung Plan je Jahr
+    for year in (2022, 2023, 2024):
+        plan_year = df_bj[(df_bj["geschaeftsjahr"] == year) & (df_bj["szenario"] == "Plan")]
+        rev       = plan_year[plan_year["konto_id"].str.startswith("4")]["betrag"].sum()
+        all_costs = plan_year[plan_year["konto_id"].str.startswith(("5", "6"))]["betrag"].sum()
+        ebit      = rev - all_costs
+        log.info("Plan %d - Umsatz: %s EUR | Kosten: %s EUR | EBIT: %s EUR (%.1f%%)",
+                 year, f"{rev:,.0f}", f"{all_costs:,.0f}", f"{ebit:,.0f}", ebit / rev * 100)

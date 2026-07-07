@@ -5,7 +5,7 @@
 --     -> Eine Zeile je Produkt-Mapping-Eintrag, Betrag * Gewicht
 --     -> cost_type = 'variabel'
 --   Fixe Konten (nicht in konto_produkt_mapping; alle 6xxx OpEx-Konten):
---     -> Eine Zeile mit SWS-900 Gemeinkosten
+--     -> Eine Zeile mit PRD-900 Gemeinkosten
 --     -> cost_type = 'fix'
 --
 -- Betraege bleiben vorzeichenlos; Vorzeichen wird in der View (v_pl_monthly) per mart.dim_account.sign aufgeloest.
@@ -48,7 +48,7 @@ BEGIN
         -- Fixe Konten: nicht in Mapping -> Gemeinkosten
         SELECT
             b.buchungsdatum, b.konto_id, b.kostenstelle_id, b.szenario,
-            'SWS-900', b.betrag, 1.0000, 'fix'
+            'PRD-900', b.betrag, 1.0000, 'fix'
         FROM raw.buchungsjournal b
         WHERE NOT EXISTS (
             SELECT 1 FROM mart.konto_produkt_mapping m WHERE m.konto_id = b.konto_id
