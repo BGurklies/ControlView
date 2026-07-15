@@ -25,13 +25,14 @@ GO
 DROP TABLE IF EXISTS mart.dim_account;
 GO
 CREATE TABLE mart.dim_account (
-    account_key      INT           NOT NULL,
-    account_id       CHAR(4)       NOT NULL,
-    account_name     NVARCHAR(100) NOT NULL,
-    account_category NVARCHAR(50)  NOT NULL,
-    pl_line          NVARCHAR(20)  NOT NULL,
-    pl_sort          TINYINT       NOT NULL,
-    sign             SMALLINT      NOT NULL,
+    account_key           INT           NOT NULL,
+    account_id            CHAR(4)       NOT NULL,
+    account_name          NVARCHAR(100) NOT NULL,
+    account_category      NVARCHAR(50)  NOT NULL,
+    account_category_sort TINYINT       NOT NULL,
+    pl_line               NVARCHAR(20)  NOT NULL,
+    pl_sort               TINYINT       NOT NULL,
+    sign                  SMALLINT      NOT NULL,
     CONSTRAINT PK_dim_account PRIMARY KEY CLUSTERED (account_key)
 );
 GO
