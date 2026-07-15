@@ -159,19 +159,25 @@ Vier Reporting-Seiten decken die klassischen Controlling-Perspektiven ab: Execut
 
 ### Seite 1: Übersicht
 
+Beantwortet die Frage, wie sich das Geschäft im gewählten Zeitraum insgesamt entwickelt: die GuV-Kaskade von Umsatz bis EBIT im Ist-Plan- und Vorjahresvergleich, als Einstiegspunkt für die drei folgenden Seiten, die jeweils eine eigene Perspektive vertiefen.
+
 ![Übersicht](docs/images/dashboard/page1_uebersicht.png)
 
 ### Seite 2: GuV-Analyse
 
-*In Arbeit.* Geplant: monatliche P&L-Matrix mit Ist/Plan/Abweichung je Kontozeile, gruppiert nach Umsatz, COGS und OpEx.
+Beantwortet, auf welcher Kontozeile und in welchem Monat eine Abweichung zum Plan entsteht: nicht nur, dass das EBIT abweicht (Seite 1), sondern wo genau. Zwei Ansichten über einen Umschalter erreichbar: relative Abweichung in % und absolute Abweichung in €.
+
+![GuV-Analyse](docs/images/dashboard/page2_guv-analyse-relativ.png)
+
+![GuV-Analyse absolut](docs/images/dashboard/page2_guv-analyse-absolut.png)
 
 ### Seite 3: Kostencontrolling
 
-*In Arbeit.* Geplant: Kostenabweichung je Kostenstelle mit Zuordnung zum jeweiligen Cost Owner.
+*In Arbeit.* Beantwortet, welche Kostenstelle eine Abweichung verantwortet: die organisatorische Sicht auf dieselbe GuV, unabhängig von der Konto- (Seite 2) und Produktsicht (Seite 4).
 
 ### Seite 4: Produktmargen
 
-*In Arbeit.* Geplant: Deckungsbeitrag I je Warengruppe im Ist-Plan-Vergleich, inklusive Margenentwicklung über die Zeit.
+*In Arbeit.* Beantwortet, welche Warengruppe tatsächlich Geld verdient: dünnmargige Endgeräte vs. hochmargiges Eigenmarke-Zubehör im Deckungsbeitrag I.
 
 DAX Measures: [`powerbi/te_create_measures.csx`](powerbi/te_create_measures.csx)
 
