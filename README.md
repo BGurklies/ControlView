@@ -167,9 +167,9 @@ Beantwortet die Frage, wie sich das Geschäft im gewählten Zeitraum insgesamt e
 
 Beantwortet, auf welcher Kontozeile und in welchem Monat eine Abweichung zum Plan entsteht: nicht nur, dass das EBIT abweicht (Seite 1), sondern wo genau. Zwei Ansichten über einen Umschalter erreichbar: relative Abweichung in % und absolute Abweichung in €.
 
-![GuV-Analyse](docs/images/dashboard/page2_guv-analyse-relativ.png)
+![GuV-Analyse](docs/images/dashboard/page2a_guv-analyse-relativ.png)
 
-![GuV-Analyse absolut](docs/images/dashboard/page2_guv-analyse-absolut.png)
+![GuV-Analyse absolut](docs/images/dashboard/page2b_guv-analyse-absolut.png)
 
 ### Seite 3: Kostencontrolling
 

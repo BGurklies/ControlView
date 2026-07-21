@@ -347,6 +347,31 @@ def apply_ebit_floor(df, min_margin=0.02):
     return df
 
 
+def apply_q1_2024_correction(df):
+    """
+    2024 Jan-Maerz (Ist) wich durch Zufallsvarianz vom in 2022/2023 etablierten
+    Q1-Saisonmuster ab (Jan/Feb sind strukturell die margenschwaechsten Monate).
+    Skaliert Erloesbuchungen je Monat auf den Durchschnitt des jeweiligen
+    Vorjahresmonats (Ø aus 2022 und 2023), analog zur apply_ebit_floor-Logik.
+    """
+    targets = {1: 0.032, 2: 0.020, 3: 0.0675}   # Ø-Marge aus 2022/2023 je Monat
+    ist_mask = df["szenario"] == "Ist"
+
+    for month, target_margin in targets.items():
+        mask      = ist_mask & (df["geschaeftsjahr"] == 2024) & (df["periode"] == month)
+        rev_mask  = mask & (df["soll_haben"] == "H")
+        cost_mask = mask & (df["soll_haben"] == "S")
+
+        rev_total  = df.loc[rev_mask, "betrag"].sum()
+        cost_total = df.loc[cost_mask, "betrag"].sum()
+
+        target_rev = cost_total / (1 - target_margin)
+        scale      = target_rev / rev_total
+        df.loc[rev_mask, "betrag"] = (df.loc[rev_mask, "betrag"] * scale).round(2)
+
+    return df
+
+
 if __name__ == "__main__":
     log = logging.getLogger(__name__)
 
@@ -364,6 +389,7 @@ if __name__ == "__main__":
 
     df_bj = generate_buchungsjournal()
     df_bj = apply_ebit_floor(df_bj, min_margin=0.02)
+    df_bj = apply_q1_2024_correction(df_bj)
     df_bj.to_csv(OUTPUT_DIR / "buchungsjournal.csv", index=False)
     log.info("buchungsjournal.csv     %d rows", len(df_bj))
 
