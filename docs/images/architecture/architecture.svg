@@ -37,8 +37,8 @@
 <!-- Power BI -->
 <rect x="160" y="334" width="400" height="72" rx="10" fill="#111e3a" stroke="#2251CC" stroke-width="1"/>
 <text x="360" y="354" text-anchor="middle" dominant-baseline="central" fill="#7FA8FF" font-size="14" font-weight="700" font-family="Segoe UI, sans-serif">Power BI Reporting</text>
-<text x="360" y="375" text-anchor="middle" dominant-baseline="central" fill="#AABFE8" font-size="11" font-family="Segoe UI, sans-serif">4-seitiges Controlling-Dashboard · Semantic Model</text>
-<text x="360" y="392" text-anchor="middle" dominant-baseline="central" fill="#AABFE8" font-size="11" font-family="Segoe UI, sans-serif">Übersicht · GuV-Analyse · Kostencontrolling · Produktmargen</text>
+<text x="360" y="375" text-anchor="middle" dominant-baseline="central" fill="#AABFE8" font-size="11" font-family="Segoe UI, sans-serif">5-seitiges Controlling-Dashboard · Semantic Model</text>
+<text x="360" y="392" text-anchor="middle" dominant-baseline="central" fill="#AABFE8" font-size="9" font-family="Segoe UI, sans-serif">Übersicht · GuV-Struktur · Abweichungsanalyse · Kostencontrolling · Produktmargen</text>
 
 <!-- Connector to foundation -->
 <line x1="360" y1="406" x2="360" y2="422" stroke="#666" stroke-width="0.5" stroke-dasharray="4 3"/>

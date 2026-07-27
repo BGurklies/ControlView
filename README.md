@@ -2,9 +2,9 @@
 
 ControlView ist eine Controlling- und BI-Lösung für einen modellierten mittelständischen Online-Händler: von der Rohdatengenerierung nach deutschen Buchhaltungsstandards über einen SQL Server Controlling Data Mart bis zum Power BI Reporting.
 
-Modelliert wird ein Online-Händler für Consumer Electronics (~50 MA, ~32M EUR Umsatz), der seine Produkte über einen eigenen Shop sowie externe Marktplätze vertreibt.
+Modelliert wird ein Online-Händler für Consumer Electronics (~50 MA, ~32M EUR Umsatz), der seine Produkte über einen eigenen Online-Shop vertreibt.
 
- Das Power BI Dashboard bildet die vollständige operative GuV-Kaskade ab, von Umsatz über Deckungsbeitrag I bis EBIT, aufgeteilt auf vier Reporting-Seiten: Übersicht, GuV-Analyse, Kostencontrolling und Produktmargen.
+ Das Power BI Dashboard bildet die vollständige operative GuV-Kaskade ab, von Umsatz über Deckungsbeitrag I bis EBIT, aufgeteilt auf fünf Reporting-Seiten: Übersicht, GuV-Struktur, Abweichungsanalyse, Kostencontrolling und Produktmargen.
 
 ---
 
@@ -18,7 +18,7 @@ Die Architektur folgt einem klassischen ELT-Ansatz mit drei Schichten: `raw`, `m
 
 ## Unternehmenskontext
 
-Die Produktstruktur umfasst vier Warengruppen und einen Gemeinkosten-Sammler und spiegelt eine reale Branchendynamik: Endgeräte (Smartphones, Notebooks, Smart Home) sind margenschwaches Volumengeschäft mit hohem Preisdruck durch Vergleichsportale und geringe Produktdifferenzierung. Zubehör (Eigenmarke) trägt dagegen die eigentliche Marge. Vor diesem Hintergrund ist der Deckungsbeitrag I je Warengruppe, nicht nur die GuV insgesamt, die zentrale Analyseebene des Dashboards (Seite 4: Produktmargen).
+Die Produktstruktur umfasst vier Warengruppen und einen Gemeinkosten-Sammler und spiegelt eine reale Branchendynamik: Endgeräte (Smartphones, Notebooks, Smart Home) sind margenschwaches Volumengeschäft mit hohem Preisdruck durch Vergleichsportale und geringe Produktdifferenzierung. Zubehör (Eigenmarke) trägt dagegen die eigentliche Marge. Vor diesem Hintergrund ist der Deckungsbeitrag I je Warengruppe, nicht nur die GuV insgesamt, die zentrale Analyseebene des Dashboards (Seite 5: Produktmargen).
 
 ### Warengruppen
 
@@ -82,6 +82,10 @@ erDiagram
         tinyint month
         nvarchar month_name
         nvarchar month_short
+        tinyint week
+        tinyint day
+        nvarchar weekday_name
+        bit is_weekend
         nvarchar year_month
     }
     dim_account {
@@ -89,6 +93,7 @@ erDiagram
         char account_id
         nvarchar account_name
         nvarchar account_category
+        tinyint account_category_sort
         nvarchar pl_line
         tinyint pl_sort
         smallint sign
@@ -146,7 +151,7 @@ erDiagram
 
 - `dim_date`: Kalenderdimension (Jahr, Quartal, Monat), Basis für Zeitraumvergleiche und YTD-Berechnungen.
 - `dim_account`: Kontenstamm mit GuV-Zuordnung (`pl_line`) und Vorzeichen (`sign`, +1 Erlöse / -1 Aufwand), damit Umsatz und Kosten im Modell korrekt saldiert werden.
-- `dim_costcenter`: Kostenstellenstamm mit Funktionsbereich und Cost Owner, Basis für die Kostenstellenanalyse (Seite 3).
+- `dim_costcenter`: Kostenstellenstamm mit Funktionsbereich und Cost Owner, Basis für die Kostenstellenanalyse (Seite 4).
 - `dim_product`: Warengruppenstamm mit Typ und Margenklasse (siehe Unternehmenskontext).
 - `dim_scenario` unterscheidet Plan (Budget) von Ist (tatsächliche Buchungen). Beide Szenarien liegen in derselben Faktentabelle, wodurch Ist-Plan-Vergleiche ohne zusätzlichen Join möglich sind.
 - `dim_cost_type` unterscheidet variable Kosten (einer Warengruppe direkt zurechenbar über `mart.konto_produkt_mapping`) von Fixkosten (Gemeinkosten, laufen auf PRD-900). Diese Trennung ist die Grundlage der Deckungsbeitragsrechnung.
@@ -155,27 +160,33 @@ erDiagram
 
 ## Power BI Dashboard
 
-Vier Reporting-Seiten decken die klassischen Controlling-Perspektiven ab: Executive-Überblick mit den zentralen Gesamtkennzahlen, GuV im Detail, Kostenstellenanalyse und Produktprofitabilität.
+Fünf Reporting-Seiten decken die klassischen Controlling-Perspektiven ab: Executive-Überblick mit den zentralen Gesamtkennzahlen, die strukturelle Zusammensetzung der GuV, die Abweichungsanalyse im Zeitverlauf, die Kostenstellenanalyse und die Produktprofitabilität.
 
 ### Seite 1: Übersicht
 
-Beantwortet die Frage, wie sich das Geschäft im gewählten Zeitraum insgesamt entwickelt: die GuV-Kaskade von Umsatz bis EBIT im Ist-Plan- und Vorjahresvergleich, als Einstiegspunkt für die drei folgenden Seiten, die jeweils eine eigene Perspektive vertiefen.
+Beantwortet die Frage, wie sich das Geschäft im gewählten Zeitraum insgesamt entwickelt: die GuV-Kaskade von Umsatz bis EBIT im Ist-Plan- und Vorjahresvergleich, als Einstiegspunkt für die vier folgenden Seiten, die jeweils eine eigene Perspektive vertiefen.
 
 ![Übersicht](docs/images/dashboard/page1_uebersicht.png)
 
-### Seite 2: GuV-Analyse
+### Seite 2: GuV-Struktur
 
-Beantwortet, auf welcher Kontozeile und in welchem Monat eine Abweichung zum Plan entsteht: nicht nur, dass das EBIT abweicht (Seite 1), sondern wo genau. Zwei Ansichten über einen Umschalter erreichbar: relative Abweichung in % und absolute Abweichung in €.
+Beantwortet, wie sich das operative Ergebnis zusammensetzt und wie viel Puffer bis zum Break-Even bleibt: vom Rohertrag über die OpEx-Quote bis zum Sicherheitsabstand zum Break-Even-Umsatz. Ergänzt um die vollständige Ergebnisrechnung je Konto (Ist, Plan, Vorjahr, Abweichung, Strukturanteil) und die Umsatzverwendung im Jahresverlauf.
 
-![GuV-Analyse](docs/images/dashboard/page2a_guv-analyse-relativ.png)
+![GuV-Struktur](docs/images/dashboard/page2_guv-struktur.png)
 
-![GuV-Analyse absolut](docs/images/dashboard/page2b_guv-analyse-absolut.png)
+### Seite 3: Abweichungsanalyse
 
-### Seite 3: Kostencontrolling
+Beantwortet nicht nur, dass das EBIT vom Plan abweicht (Seite 1), sondern worin die Abweichung zerfällt und wo genau sie entsteht: eine Abweichungsbrücke zerlegt die EBIT-Abweichung in die Beiträge der GuV-Positionen, ein Ausreißer-Zähler misst, wie viele der 21 Konten die Toleranzschwelle überschreiten, und die Heatmap lokalisiert jede Abweichung nach Konto und Monat. Über einen Umschalter in relativer (%) und absoluter (€) Darstellung.
 
-*In Arbeit.* Beantwortet, welche Kostenstelle eine Abweichung verantwortet: die organisatorische Sicht auf dieselbe GuV, unabhängig von der Konto- (Seite 2) und Produktsicht (Seite 4).
+![Abweichungsanalyse relativ](docs/images/dashboard/page3a_abweichungsanalyse.png)
 
-### Seite 4: Produktmargen
+![Abweichungsanalyse absolut](docs/images/dashboard/page3b_abweichungsanalyse.png)
+
+### Seite 4: Kostencontrolling
+
+*In Arbeit.* Beantwortet, welche Kostenstelle eine Abweichung verantwortet: die organisatorische Sicht auf dieselbe GuV, unabhängig von der Konto- (Seite 2/3) und Produktsicht (Seite 5).
+
+### Seite 5: Produktmargen
 
 *In Arbeit.* Beantwortet, welche Warengruppe tatsächlich Geld verdient: dünnmargige Endgeräte vs. hochmargiges Eigenmarke-Zubehör im Deckungsbeitrag I.
 
@@ -189,8 +200,13 @@ DAX Measures: [`powerbi/te_create_measures.csx`](powerbi/te_create_measures.csx)
 ControlView/
 ├── docs/
 │   └── images/
+│       ├── architecture/
+│       │   ├── architecture.svg
+│       │   └── guv_kaskade.svg
 │       └── dashboard/
-│           └── page1_uebersicht.png
+│           ├── page1_uebersicht.png
+│           ├── page2_guv-struktur.png
+│           └── ...
 ├── powerbi/
 │   ├── control-view_theme.json
 │   └── te_create_measures.csx
@@ -248,8 +264,9 @@ ControlView/
 | ELT-Orchestrierung | Abgeschlossen |
 | Power BI Semantic Model | Abgeschlossen |
 | Power BI Reporting: Seite 1: Übersicht | Abgeschlossen |
-| Power BI Reporting: Seite 2: GuV-Analyse | In Arbeit |
-| Power BI Reporting: Seite 3: Kostencontrolling | In Arbeit |
-| Power BI Reporting: Seite 4: Produktmargen | In Arbeit |
+| Power BI Reporting: Seite 2: GuV-Struktur | Abgeschlossen |
+| Power BI Reporting: Seite 3: Abweichungsanalyse | Abgeschlossen |
+| Power BI Reporting: Seite 4: Kostencontrolling | In Arbeit |
+| Power BI Reporting: Seite 5: Produktmargen | In Arbeit |
 
 
