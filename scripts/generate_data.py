@@ -2,7 +2,7 @@
 ControlView - Rohdaten-Generator
 
 Simuliert DATEV-Controlling-Extrakte und Stammdaten eines mittelstaendischen
-Online-Haendlers fuer Consumer Electronics (~50 MA, ~32M EUR Umsatz, eigener Shop + Marktplaetze).
+Online-Haendlers fuer Consumer Electronics (~50 MA, ~32M EUR Umsatz, eigener Online-Shop).
 
 Erzeugte Raw-CSVs (data/raw/):
   buchungsjournal.csv   : GL-Buchungen (Controlling-Extrakt, SKR04)
@@ -64,7 +64,7 @@ def generate_kontenplan():
         ("5000", "Wareneinsatz Handelswaren",            "Aufwand"),
         ("5100", "Versand & Fulfillment",                "Aufwand"),
         ("5200", "Payment- & Transaktionsgebühren",      "Aufwand"),
-        ("5300", "Retourenkosten & Wertberichtigung",     "Aufwand"),
+        ("5300", "Retourenkosten & Wertminderung",        "Aufwand"),
         # Personalkosten (6xxx)
         ("6000", "Gehälter Einkauf & Category Management", "Aufwand"),
         ("6010", "Gehälter Marketing & E-Commerce",      "Aufwand"),
@@ -75,8 +75,8 @@ def generate_kontenplan():
         # Sachkosten (6xxx)
         ("6300", "Performance Marketing & Werbung",      "Aufwand"),
         ("6400", "Software, Shop & Tools",               "Aufwand"),
-        ("6500", "Lager & Logistik",                     "Aufwand"),
-        ("6600", "IT & Zahlungsinfrastruktur",           "Aufwand"),
+        ("6500", "Lagerinfrastruktur",                   "Aufwand"),
+        ("6600", "IT-Infrastruktur & Zahlungssysteme",   "Aufwand"),
         ("6700", "Abschreibungen",                       "Aufwand"),
         ("6800", "Sonstige Betriebskosten",              "Aufwand"),
     ]
@@ -90,7 +90,7 @@ def generate_kostenstellen():
         ("KST-110", "Lieferanten & Disposition",         "Einkauf",     "EMP-1063"),
         # Marketing
         ("KST-200", "Performance Marketing",             "Marketing",   "EMP-2011"),
-        ("KST-210", "Content & Marktplätze",             "Marketing",   "EMP-2024"),
+        ("KST-210", "Content & SEO",                     "Marketing",   "EMP-2024"),
         ("KST-220", "CRM & Retention",                   "Marketing",   "EMP-2035"),
         # Service
         ("KST-300", "Kundenservice",                     "Service",     "EMP-3007"),
@@ -217,8 +217,8 @@ def generate_buchungsjournal():
         "6200": "Betriebliche AV",
         "6300": "Performance Marketing",
         "6400": "Software & Tools",
-        "6500": "Lager & Logistik",
-        "6600": "IT & Infrastruktur",
+        "6500": "Lagerinfrastruktur",
+        "6600": "IT & Zahlungssysteme",
         "6700": "Abschreibungen",
         "6800": "Sonstige Betriebskosten",
     }
