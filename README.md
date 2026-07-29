@@ -164,7 +164,7 @@ Fünf Reporting-Seiten decken die klassischen Controlling-Perspektiven ab: Execu
 
 ### Seite 1: Übersicht
 
-Beantwortet, wie sich das Geschäft im gewählten Zeitraum insgesamt entwickelt: eine KPI-Zeile mit Umsatz, EBIT, EBIT-Marge und Umsatzwachstum jeweils im Ist-Plan- und Vorjahresvergleich, ergänzt um den Jahresverlauf von Umsatz und EBIT-Marge, die Wachstumsschere aus Umsatz-, Rohertrag- und EBIT-Wachstum, die monatliche EBIT-Abweichung zum Budget und die GuV-Brücke von Umsatz über COGS und OpEx bis zum EBIT. Einstiegspunkt für die vier folgenden Seiten, die jeweils eine eigene Perspektive vertiefen.
+Beantwortet, wie sich das Geschäft im gewählten Zeitraum insgesamt entwickelt: die zentralen Kennzahlen von Umsatz bis EBIT-Marge im Ist-Plan- und Vorjahresvergleich, ihr Verlauf, ihre Abweichungen zum Budget und ihre Wachstumsdynamik über das Jahr sowie die GuV-Brücke von Umsatz über COGS und OpEx bis zum EBIT. Einstiegspunkt für die vier folgenden Seiten, die jeweils eine eigene Perspektive vertiefen.
 
 ![Übersicht](docs/images/dashboard/page1_uebersicht.png)
 
