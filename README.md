@@ -184,7 +184,9 @@ Beantwortet nicht nur, dass das EBIT vom Plan abweicht (Seite 1), sondern worin 
 
 ### Seite 4: Kostencontrolling
 
-*In Arbeit.* Beantwortet, welche Kostenstelle eine Abweichung verantwortet: die organisatorische Sicht auf dieselbe GuV, unabhängig von der Konto- (Seite 2/3) und Produktsicht (Seite 5).
+Beantwortet, welche Kostenstelle die OpEx verantwortet und wo die Kosten schwanken: die organisatorische Sicht auf dieselbe GuV, unabhängig von der Konto- (Seite 2/3) und Produktsicht (Seite 5). Ergänzt um die Personal-/Sachkosten-Aufteilung, einen Ausreißer-Zähler auf Monatsebene, den Bereichsvergleich Ist-Plan und den Kostenstellenbericht je Kostenstelle.
+
+![Kostencontrolling](docs/images/dashboard/page4_kostencontrolling.png)
 
 ### Seite 5: Produktmargen
 
@@ -266,7 +268,7 @@ ControlView/
 | Power BI Reporting: Seite 1: Übersicht | Abgeschlossen |
 | Power BI Reporting: Seite 2: GuV-Struktur | Abgeschlossen |
 | Power BI Reporting: Seite 3: Abweichungsanalyse | Abgeschlossen |
-| Power BI Reporting: Seite 4: Kostencontrolling | In Arbeit |
+| Power BI Reporting: Seite 4: Kostencontrolling | Abgeschlossen |
 | Power BI Reporting: Seite 5: Produktmargen | In Arbeit |
 
 

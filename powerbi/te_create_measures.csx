@@ -78,11 +78,6 @@ var defs = new[] {
         Dax    = @"DIVIDE([Abweichung YTD €], ABS([Budget YTD]))"
     },
     new {
-        Name   = "CF EBIT Abweichung Farbe",
-        Folder = "Base",
-        Dax    = @"IF([Abweichung €] >= 0, ""#4CA18D"", ""#CD6155"")"
-    },
-    new {
         Name   = "Abweichung %",
         Folder = "Base",
         Dax    = @"DIVIDE([Abweichung €], ABS([Budget]))"
@@ -108,6 +103,11 @@ var defs = new[] {
             RETURN
                 IF(_minSign = _maxSign && _minSign = -1, -_wert, _wert)
         "
+    },
+    new {
+        Name   = "CF EBIT Abweichung Farbe",
+        Folder = "Base",
+        Dax    = @"IF([Abweichung €] >= 0, ""#4CA18D"", ""#CD6155"")"
     },
     new {
         Name   = "Ist Vorjahr",
@@ -167,7 +167,7 @@ var defs = new[] {
 
     // ── Umsatz ────────────────────────────────────────────────────────────────
     new {
-        Name   = "Umsatz",
+        Name   = "Umsatz Ist",
         Folder = "Umsatz",
         Dax    = @"
             CALCULATE(
@@ -209,14 +209,14 @@ var defs = new[] {
         "
     },
     new {
-        Name   = "Umsatz Abweichung €",
+        Name   = "Umsatz Abweichung YTD €",
         Folder = "Umsatz",
         Dax    = @"[Umsatz Ist YTD] - [Umsatz Budget YTD]"
     },
     new {
-        Name   = "Umsatz Abweichung %",
+        Name   = "Umsatz Abweichung YTD %",
         Folder = "Umsatz",
-        Dax    = @"DIVIDE([Umsatz Abweichung €], ABS([Umsatz Budget YTD]))"
+        Dax    = @"DIVIDE([Umsatz Abweichung YTD €], ABS([Umsatz Budget YTD]))"
     },
 
     // ── Umsatz \ Badges ───────────────────────────────────────────────────────
@@ -224,8 +224,8 @@ var defs = new[] {
         Name   = "Umsatz Badge Text",
         Folder = "Umsatz\\Badges",
         Dax    = @"
-            VAR _diff = [Umsatz Abweichung €]
-            VAR _perc = FORMAT([Umsatz Abweichung %], ""0.0%;0.0%"")
+            VAR _diff = [Umsatz Abweichung YTD €]
+            VAR _perc = FORMAT([Umsatz Abweichung YTD %], ""0.0%;0.0%"")
             RETURN
                 IF(_diff > 0,
                     UNICHAR(9650) & "" "" & _perc,
@@ -237,7 +237,7 @@ var defs = new[] {
         Name   = "Umsatz Badge Text Color",
         Folder = "Umsatz\\Badges",
         Dax    = @"
-            VAR _diff = [Umsatz Abweichung €]
+            VAR _diff = [Umsatz Abweichung YTD €]
             RETURN
                 SWITCH(TRUE(),
                     _diff > 0, ""Green"",
@@ -250,7 +250,7 @@ var defs = new[] {
         Name   = "Umsatz Badge BG Color",
         Folder = "Umsatz\\Badges",
         Dax    = @"
-            VAR _diff = [Umsatz Abweichung €]
+            VAR _diff = [Umsatz Abweichung YTD €]
             RETURN
                 SWITCH(TRUE(),
                     _diff > 0, ""#EAF8EC"",
@@ -262,9 +262,9 @@ var defs = new[] {
 
     // ── EBIT ──────────────────────────────────────────────────────────────────
     new {
-        Name   = "EBIT Marge %",
+        Name   = "EBIT Marge Ist %",
         Folder = "EBIT",
-        Dax    = @"DIVIDE([Ist], ABS([Umsatz]))"
+        Dax    = @"DIVIDE([Ist], ABS([Umsatz Ist]))"
     },
     new {
         Name   = "EBIT Marge Budget %",
@@ -272,7 +272,7 @@ var defs = new[] {
         Dax    = @"IF(ISBLANK([Ist]), BLANK(), DIVIDE([Budget], ABS([Umsatz Budget])))"
     },
     new {
-        Name   = "EBIT Marge YTD Ist %",
+        Name   = "EBIT Marge Ist YTD %",
         Folder = "EBIT",
         Dax    = @"
             DIVIDE(
@@ -296,7 +296,9 @@ var defs = new[] {
         Folder = "EBIT",
         Dax    = @"
             CALCULATE(
-                [EBIT Marge YTD Ist %],
+                [EBIT Marge Ist YTD %],
+                ALL('mart dim_date'[year]),
+                ALL('mart dim_date'[quarter]),
                 SAMEPERIODLASTYEAR('mart dim_date'[full_date])
             )
         "
@@ -358,7 +360,7 @@ var defs = new[] {
         Name   = "EBIT Marge YTD Badge Text",
         Folder = "EBIT\\Badges",
         Dax    = @"
-            VAR _diff = [EBIT Marge YTD Ist %] - [EBIT Marge Budget YTD %]
+            VAR _diff = [EBIT Marge Ist YTD %] - [EBIT Marge Budget YTD %]
             VAR _pp   = FORMAT(ABS(_diff) * 100, ""0.00"") & "" pp""
             RETURN
                 IF(_diff > 0,
@@ -371,7 +373,7 @@ var defs = new[] {
         Name   = "EBIT Marge YTD Badge Text Color",
         Folder = "EBIT\\Badges",
         Dax    = @"
-            VAR _diff = [EBIT Marge YTD Ist %] - [EBIT Marge Budget YTD %]
+            VAR _diff = [EBIT Marge Ist YTD %] - [EBIT Marge Budget YTD %]
             RETURN
                 SWITCH(TRUE(),
                     _diff > 0, ""Green"",
@@ -384,7 +386,7 @@ var defs = new[] {
         Name   = "EBIT Marge YTD Badge BG Color",
         Folder = "EBIT\\Badges",
         Dax    = @"
-            VAR _diff = [EBIT Marge YTD Ist %] - [EBIT Marge Budget YTD %]
+            VAR _diff = [EBIT Marge Ist YTD %] - [EBIT Marge Budget YTD %]
             RETURN
                 SWITCH(TRUE(),
                     _diff > 0, ""#EAF8EC"",
@@ -396,7 +398,7 @@ var defs = new[] {
 
     // ── Rohertragsmarge ───────────────────────────────────────────────────────
     new {
-        Name   = "Rohertragsmarge YTD %",
+        Name   = "Rohertragsmarge Ist YTD %",
         Folder = "Rohertragsmarge",
         Dax    = @"
             VAR _rohertrag =
@@ -428,7 +430,9 @@ var defs = new[] {
         Folder = "Rohertragsmarge",
         Dax    = @"
             CALCULATE(
-                [Rohertragsmarge YTD %],
+                [Rohertragsmarge Ist YTD %],
+                ALL('mart dim_date'[year]),
+                ALL('mart dim_date'[quarter]),
                 SAMEPERIODLASTYEAR('mart dim_date'[full_date])
             )
         "
@@ -439,7 +443,7 @@ var defs = new[] {
         Name   = "Rohertragsmarge YTD Badge Text",
         Folder = "Rohertragsmarge\\Badges",
         Dax    = @"
-            VAR _diff = [Rohertragsmarge YTD %] - [Rohertragsmarge Budget YTD %]
+            VAR _diff = [Rohertragsmarge Ist YTD %] - [Rohertragsmarge Budget YTD %]
             VAR _pp   = FORMAT(ABS(_diff) * 100, ""0.00"") & "" pp""
             RETURN
                 IF(_diff > 0,
@@ -452,7 +456,7 @@ var defs = new[] {
         Name   = "Rohertragsmarge YTD Badge Text Color",
         Folder = "Rohertragsmarge\\Badges",
         Dax    = @"
-            VAR _diff = [Rohertragsmarge YTD %] - [Rohertragsmarge Budget YTD %]
+            VAR _diff = [Rohertragsmarge Ist YTD %] - [Rohertragsmarge Budget YTD %]
             RETURN
                 SWITCH(TRUE(),
                     _diff > 0, ""Green"",
@@ -465,7 +469,7 @@ var defs = new[] {
         Name   = "Rohertragsmarge YTD Badge BG Color",
         Folder = "Rohertragsmarge\\Badges",
         Dax    = @"
-            VAR _diff = [Rohertragsmarge YTD %] - [Rohertragsmarge Budget YTD %]
+            VAR _diff = [Rohertragsmarge Ist YTD %] - [Rohertragsmarge Budget YTD %]
             RETURN
                 SWITCH(TRUE(),
                     _diff > 0, ""#EAF8EC"",
@@ -666,87 +670,6 @@ var defs = new[] {
         "
     },
 
-    // ── Forecast ──────────────────────────────────────────────────────────────
-    new {
-        Name   = "Letzter Ist-Monat",
-        Folder = "Forecast",
-        Dax    = @"
-            CALCULATE(
-                MAX('mart dim_date'[month]),
-                'mart dim_scenario'[scenario_id] = ""Ist"",
-                ALLEXCEPT('mart dim_date', 'mart dim_date'[year])
-            )
-        "
-    },
-    new {
-        Name   = "Forecast EBIT",
-        Folder = "Forecast",
-        Dax    = @"
-            VAR _jahr         = SELECTEDVALUE('mart dim_date'[year], MAX('mart dim_date'[year]))
-            VAR _letzterMonat = [Letzter Ist-Monat]
-            VAR _ytdIst =
-                CALCULATE(
-                    [Ist],
-                    FILTER(ALL('mart dim_date'),
-                        'mart dim_date'[year] = _jahr
-                        && 'mart dim_date'[month] <= _letzterMonat)
-                )
-            VAR _restBudget =
-                CALCULATE(
-                    [Budget],
-                    FILTER(ALL('mart dim_date'),
-                        'mart dim_date'[year] = _jahr
-                        && 'mart dim_date'[month] > _letzterMonat)
-                )
-            RETURN
-                IF(ISBLANK(_letzterMonat), BLANK(), _ytdIst + _restBudget)
-        "
-    },
-    new {
-        Name   = "Forecast EBIT Abweichung €",
-        Folder = "Forecast",
-        Dax    = @"[Forecast EBIT] - [EBIT Budget Gesamtjahr]"
-    },
-    new {
-        Name   = "Forecast EBIT Abweichung %",
-        Folder = "Forecast",
-        Dax    = @"DIVIDE([Forecast EBIT Abweichung €], ABS([EBIT Budget Gesamtjahr]))"
-    },
-
-    // ── Forecast \ Badges ─────────────────────────────────────────────────────
-    new {
-        Name   = "Forecast EBIT Badge Text",
-        Folder = "Forecast\\Badges",
-        Dax    = @"
-            VAR _diff = [Forecast EBIT Abweichung %]
-            RETURN
-                IF(ISBLANK(_diff), BLANK(),
-                    IF(_diff > 0, UNICHAR(9650), UNICHAR(9660)) & "" "" & FORMAT(ABS(_diff), ""0.0%""))
-        "
-    },
-    new {
-        Name   = "Forecast EBIT Badge Text Color",
-        Folder = "Forecast\\Badges",
-        Dax    = @"
-            IF(ISBLANK([Forecast EBIT Abweichung %]), BLANK(),
-                SWITCH(TRUE(),
-                    [Forecast EBIT Abweichung %] > 0, ""Green"",
-                    [Forecast EBIT Abweichung %] < 0, ""Red"",
-                    ""Grey""))
-        "
-    },
-    new {
-        Name   = "Forecast EBIT Badge BG Color",
-        Folder = "Forecast\\Badges",
-        Dax    = @"
-            IF(ISBLANK([Forecast EBIT Abweichung %]), BLANK(),
-                SWITCH(TRUE(),
-                    [Forecast EBIT Abweichung %] > 0, ""#EAF8EC"",
-                    [Forecast EBIT Abweichung %] < 0, ""#FFDCDC"",
-                    ""#F2F2F2""))
-        "
-    },
-
     // ── Display ───────────────────────────────────────────────────────────────
     new {
         Name   = "Label Vorjahr",
@@ -796,7 +719,7 @@ var defs = new[] {
             CALCULATE(
                 MAXX(
                     VALUES('mart dim_product'[product_name]),
-                    [Umsatz]
+                    [Umsatz Ist]
                 ),
                 ALLSELECTED('mart dim_product'[product_name])
             ) * 1.375
@@ -827,7 +750,7 @@ var defs = new[] {
 
     // ── Rohertrag \ Badges ─────────────────────────────────────────────────────
     new {
-        Name   = "Rohertrag Badge Text",
+        Name   = "Rohertrag YTD Badge Text",
         Folder = "Rohertrag\\Badges",
         Dax    = @"
             VAR _diff = [Rohertrag Abweichung YTD €]
@@ -840,7 +763,7 @@ var defs = new[] {
         "
     },
     new {
-        Name   = "Rohertrag Badge Text Color",
+        Name   = "Rohertrag YTD Badge Text Color",
         Folder = "Rohertrag\\Badges",
         Dax    = @"
             VAR _diff = [Rohertrag Abweichung YTD €]
@@ -853,7 +776,7 @@ var defs = new[] {
         "
     },
     new {
-        Name   = "Rohertrag Badge BG Color",
+        Name   = "Rohertrag YTD Badge BG Color",
         Folder = "Rohertrag\\Badges",
         Dax    = @"
             VAR _diff = [Rohertrag Abweichung YTD €]
@@ -918,7 +841,7 @@ var defs = new[] {
         Dax    = @"DIVIDE([OpEx Abweichung YTD €], ABS([OpEx Budget YTD]))"
     },
     new {
-        Name   = "OpEx Quote YTD %",
+        Name   = "OpEx Quote Ist YTD %",
         Folder = "OpEx",
         Dax    = @"DIVIDE(ABS([OpEx Ist YTD]), ABS([Umsatz Ist YTD]))"
     },
@@ -932,7 +855,9 @@ var defs = new[] {
         Folder = "OpEx",
         Dax    = @"
             CALCULATE(
-                [OpEx Quote YTD %],
+                [OpEx Quote Ist YTD %],
+                ALL('mart dim_date'[year]),
+                ALL('mart dim_date'[quarter]),
                 SAMEPERIODLASTYEAR('mart dim_date'[full_date])
             )
         "
@@ -940,10 +865,10 @@ var defs = new[] {
 
     // ── OpEx \ Badges ──────────────────────────────────────────────────────────
     new {
-        Name   = "OpEx Quote Badge Text",
+        Name   = "OpEx Quote YTD Badge Text",
         Folder = "OpEx\\Badges",
         Dax    = @"
-            VAR _diff = [OpEx Quote YTD %] - [OpEx Quote Budget YTD %]
+            VAR _diff = [OpEx Quote Ist YTD %] - [OpEx Quote Budget YTD %]
             VAR _pp   = FORMAT(ABS(_diff) * 100, ""0.00"") & "" pp""
             RETURN
                 IF(_diff > 0,
@@ -953,10 +878,10 @@ var defs = new[] {
         "
     },
     new {
-        Name   = "OpEx Quote Badge Text Color",
+        Name   = "OpEx Quote YTD Badge Text Color",
         Folder = "OpEx\\Badges",
         Dax    = @"
-            VAR _diff = [OpEx Quote YTD %] - [OpEx Quote Budget YTD %]
+            VAR _diff = [OpEx Quote Ist YTD %] - [OpEx Quote Budget YTD %]
             RETURN
                 SWITCH(TRUE(),
                     _diff > 0, ""Red"",
@@ -966,14 +891,53 @@ var defs = new[] {
         "
     },
     new {
-        Name   = "OpEx Quote Badge BG Color",
+        Name   = "OpEx Quote YTD Badge BG Color",
         Folder = "OpEx\\Badges",
         Dax    = @"
-            VAR _diff = [OpEx Quote YTD %] - [OpEx Quote Budget YTD %]
+            VAR _diff = [OpEx Quote Ist YTD %] - [OpEx Quote Budget YTD %]
             RETURN
                 SWITCH(TRUE(),
                     _diff > 0, ""#FFDCDC"",
                     _diff < 0, ""#EAF8EC"",
+                    ""#F2F2F2""
+                )
+        "
+    },
+    new {
+        Name   = "OpEx YTD Badge Text",
+        Folder = "OpEx\\Badges",
+        Dax    = @"
+            VAR _diff = [OpEx Abweichung YTD €]
+            VAR _perc = FORMAT([OpEx Abweichung YTD %], ""0.0%;0.0%"")
+            RETURN
+                IF(_diff > 0,
+                    UNICHAR(9660) & "" "" & _perc,
+                    UNICHAR(9650) & "" "" & _perc
+                )
+        "
+    },
+    new {
+        Name   = "OpEx YTD Badge Text Color",
+        Folder = "OpEx\\Badges",
+        Dax    = @"
+            VAR _diff = [OpEx Abweichung YTD €]
+            RETURN
+                SWITCH(TRUE(),
+                    _diff > 0, ""Green"",
+                    _diff < 0, ""Red"",
+                    ""Grey""
+                )
+        "
+    },
+    new {
+        Name   = "OpEx YTD Badge BG Color",
+        Folder = "OpEx\\Badges",
+        Dax    = @"
+            VAR _diff = [OpEx Abweichung YTD €]
+            RETURN
+                SWITCH(TRUE(),
+                    _diff > 0, ""#EAF8EC"",
+                    _diff < 0, ""#FFDCDC"",
                     ""#F2F2F2""
                 )
         "
@@ -1014,22 +978,6 @@ var defs = new[] {
         Name   = "Toleranzschwelle Text",
         Folder = "Abweichungsanalyse",
         Dax    = @"FORMAT([Toleranzschwelle %], ""0.0%"") & "" ggü. Plan"""
-    },
-    new {
-        Name   = "Konten Gesamt",
-        Folder = "Abweichungsanalyse",
-        Dax    = @"CALCULATE(DISTINCTCOUNT('mart dim_account'[account_name]), ALL('mart dim_account'[account_name]))"
-    },
-    new {
-        Name   = "Konten je Kategorie (Text)",
-        Folder = "Abweichungsanalyse",
-        Dax    = @"
-            VAR _erloese  = CALCULATE(DISTINCTCOUNT('mart dim_account'[account_name]), ALL('mart dim_account'[account_name]), 'mart dim_account'[account_category] = ""Erlöse"")
-            VAR _cogs     = CALCULATE(DISTINCTCOUNT('mart dim_account'[account_name]), ALL('mart dim_account'[account_name]), 'mart dim_account'[account_category] = ""COGS"")
-            VAR _personal = CALCULATE(DISTINCTCOUNT('mart dim_account'[account_name]), ALL('mart dim_account'[account_name]), 'mart dim_account'[account_category] = ""Personalkosten"")
-            VAR _sach     = CALCULATE(DISTINCTCOUNT('mart dim_account'[account_name]), ALL('mart dim_account'[account_name]), 'mart dim_account'[account_category] = ""Sachkosten"")
-            RETURN _erloese & "" Erlöse · "" & _cogs & "" COGS · "" & _personal & "" Personal · "" & _sach & "" Sachkosten""
-        "
     },
 
     // ── Wachstum ───────────────────────────────────────────────────────────────
@@ -1110,7 +1058,7 @@ var defs = new[] {
         Folder = "Wachstum",
         Dax    = @"
             CALCULATE(
-                [Umsatz],
+                [Umsatz Ist],
                 ALL('mart dim_date'[year]),
                 ALL('mart dim_date'[quarter]),
                 SAMEPERIODLASTYEAR(DATESYTD('mart dim_date'[full_date]))
@@ -1159,32 +1107,7 @@ var defs = new[] {
 
     // ── GuV-Struktur ───────────────────────────────────────────────────────────
     new {
-        Name   = "Wareneinsatz Ist YTD",
-        Folder = "GuV-Struktur",
-        Dax    = @"CALCULATE([Ist YTD], 'mart dim_account'[account_id] = ""5000"")"
-    },
-    new {
-        Name   = "Wareneinsatz Budget YTD",
-        Folder = "GuV-Struktur",
-        Dax    = @"CALCULATE([Budget YTD], 'mart dim_account'[account_id] = ""5000"")"
-    },
-    new {
-        Name   = "Wareneinsatzquote YTD %",
-        Folder = "GuV-Struktur",
-        Dax    = @"DIVIDE(ABS([Wareneinsatz Ist YTD]), ABS([Umsatz Ist YTD]))"
-    },
-    new {
-        Name   = "Wareneinsatzquote Budget YTD %",
-        Folder = "GuV-Struktur",
-        Dax    = @"DIVIDE(ABS([Wareneinsatz Budget YTD]), ABS([Umsatz Budget YTD]))"
-    },
-    new {
-        Name   = "Wareneinsatzquote Vorjahr YTD %",
-        Folder = "GuV-Struktur",
-        Dax    = @"CALCULATE([Wareneinsatzquote YTD %], SAMEPERIODLASTYEAR('mart dim_date'[full_date]))"
-    },
-    new {
-        Name   = "Personalkosten YTD",
+        Name   = "Personalkosten Ist YTD",
         Folder = "GuV-Struktur",
         Dax    = @"CALCULATE([Ist YTD], 'mart dim_account'[account_category] = ""Personalkosten"")"
     },
@@ -1194,14 +1117,19 @@ var defs = new[] {
         Dax    = @"CALCULATE([Budget YTD], 'mart dim_account'[account_category] = ""Personalkosten"")"
     },
     new {
-        Name   = "Sachkosten YTD",
+        Name   = "Sachkosten Ist YTD",
         Folder = "GuV-Struktur",
         Dax    = @"CALCULATE([Ist YTD], 'mart dim_account'[account_category] = ""Sachkosten"")"
     },
     new {
-        Name   = "Personalkostenquote YTD %",
+        Name   = "Sachkosten Budget YTD",
         Folder = "GuV-Struktur",
-        Dax    = @"DIVIDE(ABS([Personalkosten YTD]), ABS([Umsatz Ist YTD]))"
+        Dax    = @"CALCULATE([Budget YTD], 'mart dim_account'[account_category] = ""Sachkosten"")"
+    },
+    new {
+        Name   = "Personalkostenquote Ist YTD %",
+        Folder = "GuV-Struktur",
+        Dax    = @"DIVIDE(ABS([Personalkosten Ist YTD]), ABS([Umsatz Ist YTD]))"
     },
     new {
         Name   = "Personalkostenquote Budget YTD %",
@@ -1209,14 +1137,14 @@ var defs = new[] {
         Dax    = @"DIVIDE(ABS([Personalkosten Budget YTD]), ABS([Umsatz Budget YTD]))"
     },
     new {
-        Name   = "Sachkostenquote YTD %",
+        Name   = "Sachkostenquote Ist YTD %",
         Folder = "GuV-Struktur",
-        Dax    = @"DIVIDE(ABS([Sachkosten YTD]), ABS([Umsatz Ist YTD]))"
+        Dax    = @"DIVIDE(ABS([Sachkosten Ist YTD]), ABS([Umsatz Ist YTD]))"
     },
     new {
-        Name   = "Break-Even-Umsatz YTD",
+        Name   = "Break-Even-Umsatz Ist YTD",
         Folder = "GuV-Struktur",
-        Dax    = @"DIVIDE(ABS([OpEx Ist YTD]), [Rohertragsmarge YTD %])"
+        Dax    = @"DIVIDE(ABS([OpEx Ist YTD]), [Rohertragsmarge Ist YTD %])"
     },
     new {
         Name   = "Break-Even-Umsatz Budget YTD",
@@ -1224,9 +1152,9 @@ var defs = new[] {
         Dax    = @"DIVIDE(ABS([OpEx Budget YTD]), [Rohertragsmarge Budget YTD %])"
     },
     new {
-        Name   = "Sicherheitsabstand YTD %",
+        Name   = "Sicherheitsabstand Ist YTD %",
         Folder = "GuV-Struktur",
-        Dax    = @"DIVIDE([Umsatz Ist YTD] - [Break-Even-Umsatz YTD], [Umsatz Ist YTD])"
+        Dax    = @"DIVIDE([Umsatz Ist YTD] - [Break-Even-Umsatz Ist YTD], [Umsatz Ist YTD])"
     },
     new {
         Name   = "Sicherheitsabstand Budget YTD %",
@@ -1236,49 +1164,10 @@ var defs = new[] {
 
     // ── GuV-Struktur \ Badges ──────────────────────────────────────────────────
     new {
-        Name   = "Wareneinsatzquote Badge Text",
-        Folder = "GuV-Struktur\\Badges",
-        Dax    = @"
-            VAR _diff = [Wareneinsatzquote YTD %] - [Wareneinsatzquote Budget YTD %]
-            VAR _pp   = FORMAT(ABS(_diff) * 100, ""0.00"") & "" pp""
-            RETURN
-                IF(_diff > 0,
-                    UNICHAR(9650) & "" "" & _pp,
-                    UNICHAR(9660) & "" "" & _pp
-                )
-        "
-    },
-    new {
-        Name   = "Wareneinsatzquote Badge Text Color",
-        Folder = "GuV-Struktur\\Badges",
-        Dax    = @"
-            VAR _diff = [Wareneinsatzquote YTD %] - [Wareneinsatzquote Budget YTD %]
-            RETURN
-                SWITCH(TRUE(),
-                    _diff > 0, ""Red"",
-                    _diff < 0, ""Green"",
-                    ""Grey""
-                )
-        "
-    },
-    new {
-        Name   = "Wareneinsatzquote Badge BG Color",
-        Folder = "GuV-Struktur\\Badges",
-        Dax    = @"
-            VAR _diff = [Wareneinsatzquote YTD %] - [Wareneinsatzquote Budget YTD %]
-            RETURN
-                SWITCH(TRUE(),
-                    _diff > 0, ""#FFDCDC"",
-                    _diff < 0, ""#EAF8EC"",
-                    ""#F2F2F2""
-                )
-        "
-    },
-    new {
         Name   = "Sicherheitsabstand Badge Text",
         Folder = "GuV-Struktur\\Badges",
         Dax    = @"
-            VAR _diff = [Sicherheitsabstand YTD %] - [Sicherheitsabstand Budget YTD %]
+            VAR _diff = [Sicherheitsabstand Ist YTD %] - [Sicherheitsabstand Budget YTD %]
             VAR _pp   = FORMAT(ABS(_diff) * 100, ""0.00"") & "" pp""
             RETURN
                 IF(_diff > 0,
@@ -1291,7 +1180,7 @@ var defs = new[] {
         Name   = "Sicherheitsabstand Badge Text Color",
         Folder = "GuV-Struktur\\Badges",
         Dax    = @"
-            VAR _diff = [Sicherheitsabstand YTD %] - [Sicherheitsabstand Budget YTD %]
+            VAR _diff = [Sicherheitsabstand Ist YTD %] - [Sicherheitsabstand Budget YTD %]
             RETURN
                 SWITCH(TRUE(),
                     _diff > 0, ""Green"",
@@ -1304,7 +1193,7 @@ var defs = new[] {
         Name   = "Sicherheitsabstand Badge BG Color",
         Folder = "GuV-Struktur\\Badges",
         Dax    = @"
-            VAR _diff = [Sicherheitsabstand YTD %] - [Sicherheitsabstand Budget YTD %]
+            VAR _diff = [Sicherheitsabstand Ist YTD %] - [Sicherheitsabstand Budget YTD %]
             RETURN
                 SWITCH(TRUE(),
                     _diff > 0, ""#EAF8EC"",
@@ -1316,29 +1205,187 @@ var defs = new[] {
 
     // ── GuV-Struktur \ Umsatzverwendung ────────────────────────────────────────
     new {
-        Name   = "COGS Ist (absolut)",
+        Name   = "COGS Ist (abs)",
         Folder = "GuV-Struktur\\Umsatzverwendung",
         Dax    = @"ABS([COGS Ist])"
     },
     new {
-        Name   = "OpEx Ist (absolut)",
+        Name   = "OpEx Ist (abs)",
         Folder = "GuV-Struktur\\Umsatzverwendung",
         Dax    = @"ABS([OpEx Ist])"
     },
     new {
         Name   = "Anteil COGS %",
         Folder = "GuV-Struktur\\Umsatzverwendung",
-        Dax    = @"DIVIDE(ABS([COGS Ist]), ABS([Umsatz]))"
+        Dax    = @"DIVIDE(ABS([COGS Ist]), ABS([Umsatz Ist]))"
     },
     new {
         Name   = "Anteil OpEx %",
         Folder = "GuV-Struktur\\Umsatzverwendung",
-        Dax    = @"DIVIDE(ABS([OpEx Ist]), ABS([Umsatz]))"
+        Dax    = @"DIVIDE(ABS([OpEx Ist]), ABS([Umsatz Ist]))"
     },
     new {
         Name   = "Anteil EBIT %",
         Folder = "GuV-Struktur\\Umsatzverwendung",
-        Dax    = @"DIVIDE([Ist], ABS([Umsatz]))"
+        Dax    = @"DIVIDE([Ist], ABS([Umsatz Ist]))"
+    },
+
+    // ── Kostencontrolling ──────────────────────────────────────────────────────
+    new {
+        Name   = "Personalkosten Ist YTD (abs)",
+        Folder = "Kostencontrolling",
+        Dax    = @"ABS([Personalkosten Ist YTD])"
+    },
+    new {
+        Name   = "Sachkosten Ist YTD (abs)",
+        Folder = "Kostencontrolling",
+        Dax    = @"ABS([Sachkosten Ist YTD])"
+    },
+    new {
+        Name   = "OpEx Ist YTD (abs)",
+        Folder = "Kostencontrolling",
+        Dax    = @"ABS([OpEx Ist YTD])"
+    },
+    new {
+        Name   = "OpEx Budget YTD (abs)",
+        Folder = "Kostencontrolling",
+        Dax    = @"ABS([OpEx Budget YTD])"
+    },
+    new {
+        Name   = "OpEx Budget (abs)",
+        Folder = "Kostencontrolling",
+        Dax    = @"ABS([OpEx Budget])"
+    },
+    new {
+        Name   = "Personalkostenintensität Ist YTD %",
+        Folder = "Kostencontrolling",
+        Dax    = @"DIVIDE(ABS([Personalkosten Ist YTD]), ABS([OpEx Ist YTD]))"
+    },
+    new {
+        Name   = "Sachkostenintensität Ist YTD %",
+        Folder = "Kostencontrolling",
+        Dax    = @"DIVIDE(ABS([Sachkosten Ist YTD]), ABS([OpEx Ist YTD]))"
+    },
+    new {
+        Name   = "Personalkostenintensität Vorjahr YTD %",
+        Folder = "Kostencontrolling",
+        Dax    = @"
+            CALCULATE(
+                [Personalkostenintensität Ist YTD %],
+                ALL('mart dim_date'[year]),
+                ALL('mart dim_date'[quarter]),
+                SAMEPERIODLASTYEAR('mart dim_date'[full_date])
+            )
+        "
+    },
+    new {
+        Name   = "Sachkostenintensität Vorjahr YTD %",
+        Folder = "Kostencontrolling",
+        Dax    = @"
+            CALCULATE(
+                [Sachkostenintensität Ist YTD %],
+                ALL('mart dim_date'[year]),
+                ALL('mart dim_date'[quarter]),
+                SAMEPERIODLASTYEAR('mart dim_date'[full_date])
+            )
+        "
+    },
+    new {
+        Name   = "Toleranzschwelle Monat %",
+        Folder = "Kostencontrolling",
+        Dax    = @"0.05"
+    },
+    new {
+        Name   = "Abweichende Bereichsmonate",
+        Folder = "Kostencontrolling",
+        Dax    = @"
+            COUNTROWS(
+                FILTER(
+                    CROSSJOIN(
+                        VALUES('mart dim_costcenter'[area]),
+                        SUMMARIZE('mart dim_date', 'mart dim_date'[year], 'mart dim_date'[month])
+                    ),
+                    ABS(CALCULATE([OpEx Abweichung %])) > [Toleranzschwelle Monat %]
+                )
+            )
+        "
+    },
+    new {
+        Name   = "Bereichsmonate Gesamt",
+        Folder = "Kostencontrolling",
+        Dax    = @"
+            COUNTROWS(
+                FILTER(
+                    CROSSJOIN(
+                        VALUES('mart dim_costcenter'[area]),
+                        SUMMARIZE('mart dim_date', 'mart dim_date'[year], 'mart dim_date'[month])
+                    ),
+                    NOT ISBLANK(CALCULATE([OpEx Ist]))
+                )
+            )
+        "
+    },
+    new {
+        Name   = "Toleranzschwelle Monat Text",
+        Folder = "Kostencontrolling",
+        Dax    = @"FORMAT([Toleranzschwelle Monat %], ""0%"") & "" ggü. Plan"""
+    },
+    new {
+        Name   = "Abweichende Bereichsmonate Text",
+        Folder = "Kostencontrolling",
+        Dax    = @"FORMAT([Abweichende Bereichsmonate], ""0"") & "" von "" & FORMAT([Bereichsmonate Gesamt], ""0"")"
+    },
+    new {
+        Name   = "Bereichsmonate Basis Text",
+        Folder = "Kostencontrolling",
+        Dax    = @"
+            VAR _b = COUNTROWS(VALUES('mart dim_costcenter'[area]))
+            VAR _m = COUNTROWS(SUMMARIZE('mart dim_date', 'mart dim_date'[year], 'mart dim_date'[month]))
+            RETURN FORMAT(_b, ""0"") & "" Bereiche × "" & FORMAT(_m, ""0"") & "" Monate""
+        "
+    },
+    new {
+        Name   = "Cost Owner",
+        Folder = "Kostencontrolling",
+        Dax    = @"SELECTEDVALUE('mart dim_costcenter'[cost_owner_id])"
+    },
+    new {
+        Name   = "OpEx Abweichung Titel",
+        Folder = "Kostencontrolling",
+        Dax    = @"
+            VAR _area = SELECTEDVALUE('mart dim_costcenter'[area])
+            RETURN
+                ""OpEx-Abweichung: "" &
+                IF(ISBLANK(_area), ""alle Bereiche"", ""Bereich "" & _area)
+        "
+    },
+
+    // ── Kostencontrolling \ Badges ─────────────────────────────────────────────
+    new {
+        Name   = "Personalkostenintensität YTD Badge Text",
+        Folder = "Kostencontrolling\\Badges",
+        Dax    = @"
+            VAR _diff = [Personalkostenintensität Ist YTD %] - [Personalkostenintensität Vorjahr YTD %]
+            VAR _pp   = FORMAT(ABS(_diff) * 100, ""0.00"") & "" pp""
+            RETURN
+                IF(_diff >= 0,
+                    UNICHAR(9650) & "" "" & _pp,
+                    UNICHAR(9660) & "" "" & _pp
+                )
+        "
+    },
+    new {
+        Name   = "Sachkostenintensität YTD Badge Text",
+        Folder = "Kostencontrolling\\Badges",
+        Dax    = @"
+            VAR _diff = [Sachkostenintensität Ist YTD %] - [Sachkostenintensität Vorjahr YTD %]
+            VAR _pp   = FORMAT(ABS(_diff) * 100, ""0.00"") & "" pp""
+            RETURN
+                IF(_diff >= 0,
+                    UNICHAR(9650) & "" "" & _pp,
+                    UNICHAR(9660) & "" "" & _pp
+                )
+        "
     },
 };
 
