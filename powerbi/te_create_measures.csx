@@ -1387,8 +1387,446 @@ var defs = new[] {
                 )
         "
     },
+
+    // ── Produktmarge ─────────────────────────────────────────────────────────
+    new {
+        Name   = "DB I Ist",
+        Folder = "Produktmarge",
+        Dax    = @"
+            CALCULATE([Ist], 'mart dim_cost_type'[cost_type_id] = ""variabel"")
+        "
+    },
+    new {
+        Name   = "DB I Budget",
+        Folder = "Produktmarge",
+        Dax    = @"
+            CALCULATE([Budget], 'mart dim_cost_type'[cost_type_id] = ""variabel"")
+        "
+    },
+
+    // ── Produktmarge \ Hochmarge ─────────────────────────────────────────────
+    new {
+        Name   = "DB I Hochmarge Ist",
+        Folder = "Produktmarge\\Hochmarge",
+        Dax    = @"
+            CALCULATE([DB I Ist], 'mart dim_product'[margin_class] = ""Hochmarge"")
+        "
+    },
+    new {
+        Name   = "Umsatz Hochmarge Ist",
+        Folder = "Produktmarge\\Hochmarge",
+        Dax    = @"
+            CALCULATE([Umsatz Ist], 'mart dim_product'[margin_class] = ""Hochmarge"")
+        "
+    },
+    new {
+        Name   = "DB-Anteil Hochmarge %",
+        Folder = "Produktmarge\\Hochmarge",
+        Dax    = @"
+            DIVIDE([DB I Hochmarge Ist], CALCULATE([DB I Ist], ALL('mart dim_product')))
+        "
+    },
+    new {
+        Name   = "Umsatzanteil Hochmarge %",
+        Folder = "Produktmarge\\Hochmarge",
+        Dax    = @"
+            DIVIDE([Umsatz Hochmarge Ist], CALCULATE([Umsatz Ist], ALL('mart dim_product')))
+        "
+    },
+    new {
+        Name   = "Hochmargen-Hebel",
+        Folder = "Produktmarge\\Hochmarge",
+        Dax    = @"
+            DIVIDE([DB-Anteil Hochmarge %], [Umsatzanteil Hochmarge %])
+        "
+    },
+    new {
+        Name   = "Hochmargen-Hebel Text",
+        Folder = "Produktmarge\\Hochmarge",
+        Dax    = @"
+            FORMAT([Hochmargen-Hebel], ""0.0"") & ""×""
+        "
+    },
+    new {
+        Name   = "Hochmargen-Beitrag Text",
+        Folder = "Produktmarge\\Hochmarge",
+        Dax    = @"
+            FORMAT([DB-Anteil Hochmarge %], ""0.0%"") & "" DB bei "" &
+            FORMAT([Umsatzanteil Hochmarge %], ""0.0%"") & "" Umsatz""
+        "
+    },
+    new {
+        Name   = "Hochmargen-DB Text",
+        Folder = "Produktmarge\\Hochmarge",
+        Dax    = @"
+            FORMAT([DB I Hochmarge Ist] / 1000000, ""0.00"") & "" Mio. € DB""
+        "
+    },
+
+    // ── Produktmarge \ Volumenmarge ──────────────────────────────────────────
+    new {
+        Name   = "DB I Volumen Ist",
+        Folder = "Produktmarge\\Volumenmarge",
+        Dax    = @"
+            CALCULATE([DB I Ist], 'mart dim_product'[margin_class] = ""Volumen"")
+        "
+    },
+    new {
+        Name   = "Umsatz Volumen Ist",
+        Folder = "Produktmarge\\Volumenmarge",
+        Dax    = @"
+            CALCULATE([Umsatz Ist], 'mart dim_product'[margin_class] = ""Volumen"")
+        "
+    },
+    new {
+        Name   = "DB-Anteil Volumen %",
+        Folder = "Produktmarge\\Volumenmarge",
+        Dax    = @"
+            DIVIDE([DB I Volumen Ist], CALCULATE([DB I Ist], ALL('mart dim_product')))
+        "
+    },
+    new {
+        Name   = "Umsatzanteil Volumen %",
+        Folder = "Produktmarge\\Volumenmarge",
+        Dax    = @"
+            DIVIDE([Umsatz Volumen Ist], CALCULATE([Umsatz Ist], ALL('mart dim_product')))
+        "
+    },
+    new {
+        Name   = "Volumen-Hebel",
+        Folder = "Produktmarge\\Volumenmarge",
+        Dax    = @"
+            DIVIDE([DB-Anteil Volumen %], [Umsatzanteil Volumen %])
+        "
+    },
+    new {
+        Name   = "Volumen-Hebel Text",
+        Folder = "Produktmarge\\Volumenmarge",
+        Dax    = @"
+            FORMAT([Volumen-Hebel], ""0.0"") & ""×""
+        "
+    },
+    new {
+        Name   = "Volumen-Beitrag Text",
+        Folder = "Produktmarge\\Volumenmarge",
+        Dax    = @"
+            FORMAT([DB-Anteil Volumen %], ""0.0%"") & "" DB bei "" &
+            FORMAT([Umsatzanteil Volumen %], ""0.0%"") & "" Umsatz""
+        "
+    },
+    new {
+        Name   = "Volumen-DB Text",
+        Folder = "Produktmarge\\Volumenmarge",
+        Dax    = @"
+            FORMAT([DB I Volumen Ist] / 1000000, ""0.00"") & "" Mio. € DB""
+        "
+    },
+    new {
+        Name   = "DB I Marge Ist %",
+        Folder = "Produktmarge",
+        Dax    = @"
+            DIVIDE([DB I Ist], ABS([Umsatz Ist]))
+        "
+    },
+
+    // ── Produktmarge \ Marge-Spread ──────────────────────────────────────────
+    new {
+        Name   = "DB I Marge Max %",
+        Folder = "Produktmarge\\Marge-Spread",
+        Dax    = @"
+            VAR _m =
+                FILTER(
+                    ADDCOLUMNS(
+                        FILTER(
+                            VALUES('mart dim_product'[product_name]),
+                            'mart dim_product'[product_name] <> ""Gemeinkosten""
+                        ),
+                        ""@marge"", [DB I Marge Ist %]
+                    ),
+                    NOT ISBLANK([@marge])
+                )
+            RETURN MAXX(_m, [@marge])
+        "
+    },
+    new {
+        Name   = "DB I Marge Min %",
+        Folder = "Produktmarge\\Marge-Spread",
+        Dax    = @"
+            VAR _m =
+                FILTER(
+                    ADDCOLUMNS(
+                        FILTER(
+                            VALUES('mart dim_product'[product_name]),
+                            'mart dim_product'[product_name] <> ""Gemeinkosten""
+                        ),
+                        ""@marge"", [DB I Marge Ist %]
+                    ),
+                    NOT ISBLANK([@marge])
+                )
+            RETURN MINX(_m, [@marge])
+        "
+    },
+    new {
+        Name   = "DB I Marge Spread pp",
+        Folder = "Produktmarge\\Marge-Spread",
+        Dax    = @"
+            ([DB I Marge Max %] - [DB I Marge Min %]) * 100
+        "
+    },
+    new {
+        Name   = "DB I Marge Spread Text",
+        Folder = "Produktmarge\\Marge-Spread",
+        Dax    = @"
+            FORMAT([DB I Marge Spread pp], ""0.0"") & "" pp""
+        "
+    },
+    new {
+        Name   = "DB I Marge Spanne Text",
+        Folder = "Produktmarge\\Marge-Spread",
+        Dax    = @"
+            ""Max: "" & FORMAT([DB I Marge Max %], ""0.0%"") &
+            "" · Min: "" & FORMAT([DB I Marge Min %], ""0.0%"")
+        "
+    },
+    new {
+        Name   = "DB I Marge Portfolio Text",
+        Folder = "Produktmarge\\Marge-Spread",
+        Dax    = @"
+            ""Portfolio-Marge · "" & FORMAT([DB I Marge Ist %], ""0.0%"")
+        "
+    },
+
+    // ── Produktmarge \ Standardmarge ─────────────────────────────────────────
+    new {
+        Name   = "DB I Standard Ist",
+        Folder = "Produktmarge\\Standardmarge",
+        Dax    = @"
+            CALCULATE([DB I Ist],   'mart dim_product'[margin_class] = ""Standard"")
+        "
+    },
+    new {
+        Name   = "Umsatz Standard Ist",
+        Folder = "Produktmarge\\Standardmarge",
+        Dax    = @"
+            CALCULATE([Umsatz Ist], 'mart dim_product'[margin_class] = ""Standard"")
+        "
+    },
+    new {
+        Name   = "DB-Anteil Standard %",
+        Folder = "Produktmarge\\Standardmarge",
+        Dax    = @"
+            DIVIDE([DB I Standard Ist],   CALCULATE([DB I Ist],   ALL('mart dim_product')))
+        "
+    },
+    new {
+        Name   = "Umsatzanteil Standard %",
+        Folder = "Produktmarge\\Standardmarge",
+        Dax    = @"
+            DIVIDE([Umsatz Standard Ist], CALCULATE([Umsatz Ist], ALL('mart dim_product')))
+        "
+    },
+    new {
+        Name   = "Standard-Hebel",
+        Folder = "Produktmarge\\Standardmarge",
+        Dax    = @"
+            DIVIDE([DB-Anteil Standard %], [Umsatzanteil Standard %])
+        "
+    },
+    new {
+        Name   = "Standard-Hebel Text",
+        Folder = "Produktmarge\\Standardmarge",
+        Dax    = @"
+            FORMAT([Standard-Hebel], ""0.0"") & ""×""
+        "
+    },
+    new {
+        Name   = "Standard-Beitrag Text",
+        Folder = "Produktmarge\\Standardmarge",
+        Dax    = @"
+                FORMAT([DB-Anteil Standard %], ""0.0%"") & "" DB bei "" &
+                FORMAT([Umsatzanteil Standard %], ""0.0%"") & "" Umsatz""
+        "
+    },
+    new {
+        Name   = "Standard-DB Text",
+        Folder = "Produktmarge\\Standardmarge",
+        Dax    = @"
+            FORMAT([DB I Standard Ist] / 1000000, ""0.00"") & "" Mio. € DB""
+        "
+    },
+    new {
+        Name   = "Axis Max DB I Produkt",
+        Folder = "Produktmarge",
+        Dax    = @"
+            CALCULATE(
+                MAXX(VALUES('mart dim_product'[product_name]), [DB I Ist]),
+                ALLSELECTED('mart dim_product')
+            ) * 1.15
+        "
+    },
+    new {
+        Name   = "DB I Marge Budget %",
+        Folder = "Produktmarge",
+        Dax    = @"
+            DIVIDE([DB I Budget], ABS([Umsatz Budget]))
+        "
+    },
+    new {
+        Name   = "DB I Marge Abweichung pp",
+        Folder = "Produktmarge",
+        Dax    = @"
+            ([DB I Marge Ist %] - [DB I Marge Budget %]) * 100
+        "
+    },
+    new {
+        Name   = "DB I Marge Vorjahr %",
+        Folder = "Produktmarge",
+        Dax    = @"
+            CALCULATE([DB I Marge Ist %],
+                ALL('mart dim_date'[year]), ALL('mart dim_date'[quarter]),
+                SAMEPERIODLASTYEAR('mart dim_date'[full_date]))
+        "
+    },
+    new {
+        Name   = "DB I Marge Abweichung Vorjahr pp",
+        Folder = "Produktmarge",
+        Dax    = @"
+            ([DB I Marge Ist %] - [DB I Marge Vorjahr %]) * 100
+        "
+    },
+    new {
+        Name   = "DB-Anteil %",
+        Folder = "Produktmarge",
+        Dax    = @"
+            DIVIDE([DB I Ist], CALCULATE([DB I Ist], ALLSELECTED('mart dim_product')))
+        "
+    },
+    new {
+        Name   = "CF Margenklasse Farbe",
+        Folder = "Produktmarge",
+        Dax    = @"
+            SWITCH(
+                SELECTEDVALUE('mart dim_product'[margin_class]),
+                ""Hochmarge"", ""#173B5B"",
+                ""Standard"",  ""#235889"",
+                ""Volumen"",   ""#ABC8E2"",
+                ""#FFFFFF""
+            )
+        "
+    },
+    new {
+        Name   = "CF Margenklasse Textfarbe",
+        Folder = "Produktmarge",
+        Dax    = @"
+            SWITCH(
+                SELECTEDVALUE('mart dim_product'[margin_class]),
+                ""Hochmarge"", ""#FFFFFF"",
+                ""Standard"",  ""#FFFFFF"",
+                ""Volumen"",   ""#333333"",
+                ""#333333""
+            )
+        "
+    },
+};
+
+// Formatzeichenfolgen
+var formats = new Dictionary<string, string> {
+
+    // ── Währung, 0 Nachkommastellen ────────────────────────────────────────
+    { "Abweichung €", @"""€""\ #,0;-""€""\ #,0;""€""\ #,0" },
+    { "Abweichung € (natürlich)", @"""€""\ #,0;-""€""\ #,0;""€""\ #,0" },
+    { "Budget", @"""€""\ #,0;-""€""\ #,0;""€""\ #,0" },
+    { "DB I Ist", @"""€""\ #,0;-""€""\ #,0;""€""\ #,0" },
+    { "Ist", @"""€""\ #,0;-""€""\ #,0;""€""\ #,0" },
+    { "Ist Vorjahr", @"""€""\ #,0;-""€""\ #,0;""€""\ #,0" },
+    { "OpEx Abweichung €", @"""€""\ #,0;-""€""\ #,0;""€""\ #,0" },
+    { "OpEx Budget (abs)", @"""€""\ #,0;-""€""\ #,0;""€""\ #,0" },
+    { "OpEx Ist (abs)", @"""€""\ #,0;-""€""\ #,0;""€""\ #,0" },
+
+    // ── Währung, 2 Nachkommastellen ────────────────────────────────────────
+    { "Abweichung YTD €", @"""€""\ #,0.00;-""€""\ #,0.00;""€""\ #,0.00" },
+    { "Break-Even-Umsatz Ist YTD", @"""€""\ #,0.00;-""€""\ #,0.00;""€""\ #,0.00" },
+    { "Budget YTD", @"""€""\ #,0.00;-""€""\ #,0.00;""€""\ #,0.00" },
+    { "Budget YoY Wachstum €", @"""€""\ #,0.00;-""€""\ #,0.00;""€""\ #,0.00" },
+    { "EBIT Budget Gesamtjahr", @"""€""\ #,0.00;-""€""\ #,0.00;""€""\ #,0.00" },
+    { "Ist YTD", @"""€""\ #,0.00;-""€""\ #,0.00;""€""\ #,0.00" },
+    { "OpEx Abweichung YTD €", @"""€""\ #,0.00;-""€""\ #,0.00;""€""\ #,0.00" },
+    { "OpEx Budget YTD (abs)", @"""€""\ #,0.00;-""€""\ #,0.00;""€""\ #,0.00" },
+    { "OpEx Ist YTD", @"""€""\ #,0.00;-""€""\ #,0.00;""€""\ #,0.00" },
+    { "OpEx Ist YTD (abs)", @"""€""\ #,0.00;-""€""\ #,0.00;""€""\ #,0.00" },
+    { "Personalkosten Ist YTD", @"""€""\ #,0.00;-""€""\ #,0.00;""€""\ #,0.00" },
+    { "Personalkosten Ist YTD (abs)", @"""€""\ #,0.00;-""€""\ #,0.00;""€""\ #,0.00" },
+    { "Rohertrag Abweichung YTD €", @"""€""\ #,0.00;-""€""\ #,0.00;""€""\ #,0.00" },
+    { "Rohertrag Budget YTD", @"""€""\ #,0.00;-""€""\ #,0.00;""€""\ #,0.00" },
+    { "Rohertrag Ist YTD", @"""€""\ #,0.00;-""€""\ #,0.00;""€""\ #,0.00" },
+    { "Sachkosten Ist YTD", @"""€""\ #,0.00;-""€""\ #,0.00;""€""\ #,0.00" },
+    { "Sachkosten Ist YTD (abs)", @"""€""\ #,0.00;-""€""\ #,0.00;""€""\ #,0.00" },
+    { "Umsatz Abweichung YTD €", @"""€""\ #,0.00;-""€""\ #,0.00;""€""\ #,0.00" },
+    { "Umsatz Budget YTD", @"""€""\ #,0.00;-""€""\ #,0.00;""€""\ #,0.00" },
+    { "Umsatz Ist", @"""€""\ #,0.00;-""€""\ #,0.00;""€""\ #,0.00" },
+    { "Umsatz Ist YTD", @"""€""\ #,0.00;-""€""\ #,0.00;""€""\ #,0.00" },
+    { "Umsatz Vorjahr", @"""€""\ #,0.00;-""€""\ #,0.00;""€""\ #,0.00" },
+    { "Umsatz YoY Wachstum Abw. €", @"""€""\ #,0.00;-""€""\ #,0.00;""€""\ #,0.00" },
+    { "Umsatz YoY Wachstum €", @"""€""\ #,0.00;-""€""\ #,0.00;""€""\ #,0.00" },
+
+    // ── Prozent, 2 Nachkommastellen ────────────────────────────────────────
+    { "Abweichung %", @"0.00%;-0.00%;0.00%" },
+    { "Abweichung % (natürlich)", @"0.00%;-0.00%;0.00%" },
+    { "Abweichung Vorjahr %", @"0.00%;-0.00%;0.00%" },
+    { "Abweichung Vorjahr % (natürlich)", @"0.00%;-0.00%;0.00%" },
+    { "Abweichung YTD %", @"0.00%;-0.00%;0.00%" },
+    { "Anteil COGS %", @"0.00%;-0.00%;0.00%" },
+    { "Anteil EBIT %", @"0.00%;-0.00%;0.00%" },
+    { "Anteil OpEx %", @"0.00%;-0.00%;0.00%" },
+    { "Anteil an Kategorie %", @"0.00%;-0.00%;0.00%" },
+    { "EBIT Marge Budget %", @"0.00%;-0.00%;0.00%" },
+    { "EBIT Marge Budget YTD %", @"0.00%;-0.00%;0.00%" },
+    { "EBIT Marge Ist %", @"0.00%;-0.00%;0.00%" },
+    { "EBIT Marge Ist YTD %", @"0.00%;-0.00%;0.00%" },
+    { "EBIT Marge Vorjahr YTD %", @"0.00%;-0.00%;0.00%" },
+    { "EBIT-Wachstum YTD YoY (Monat)", @"0.00%;-0.00%;0.00%" },
+    { "EBIT-Wachstum YoY", @"0.00%;-0.00%;0.00%" },
+    { "OpEx Abweichung %", @"0.00%;-0.00%;0.00%" },
+    { "OpEx Quote Budget YTD %", @"0.00%;-0.00%;0.00%" },
+    { "OpEx Quote Ist YTD %", @"0.00%;-0.00%;0.00%" },
+    { "OpEx Quote Vorjahr YTD %", @"0.00%;-0.00%;0.00%" },
+    { "Personalkostenintensität Ist YTD %", @"0.00%;-0.00%;0.00%" },
+    { "Personalkostenintensität Vorjahr YTD %", @"0.00%;-0.00%;0.00%" },
+    { "Personalkostenquote Ist YTD %", @"0.00%;-0.00%;0.00%" },
+    { "Rohertrag-Wachstum YTD YoY (Monat)", @"0.00%;-0.00%;0.00%" },
+    { "Rohertrag-Wachstum YoY", @"0.00%;-0.00%;0.00%" },
+    { "Rohertragsmarge Budget YTD %", @"0.00%;-0.00%;0.00%" },
+    { "Rohertragsmarge Ist YTD %", @"0.00%;-0.00%;0.00%" },
+    { "Rohertragsmarge Vorjahr YTD %", @"0.00%;-0.00%;0.00%" },
+    { "Sachkostenintensität Ist YTD %", @"0.00%;-0.00%;0.00%" },
+    { "Sachkostenintensität Vorjahr YTD %", @"0.00%;-0.00%;0.00%" },
+    { "Sicherheitsabstand Budget YTD %", @"0.00%;-0.00%;0.00%" },
+    { "Sicherheitsabstand Ist YTD %", @"0.00%;-0.00%;0.00%" },
+    { "Toleranzschwelle Monat %", @"0.00%;-0.00%;0.00%" },
+    { "Umsatz YoY %", @"0.00%;-0.00%;0.00%" },
+    { "Umsatz YoY Budget %", @"0.00%;-0.00%;0.00%" },
+    { "Umsatzwachstum YTD YoY (Monat)", @"0.00%;-0.00%;0.00%" },
+
+    // ── Prozent, 1 Nachkommastelle ─────────────────────────────────────────
+    { "DB I Marge Budget %", @"0.0%;-0.0%;0.0%" },
+    { "DB I Marge Ist %", @"0.0%;-0.0%;0.0%" },
+    { "DB I Marge Vorjahr %", @"0.0%;-0.0%;0.0%" },
+    { "DB-Anteil %", @"0.0%;-0.0%;0.0%" },
+    { "Toleranzschwelle %", @"0.0%;-0.0%;0.0%" },
+
+    // ── Ganzzahl ───────────────────────────────────────────────────────────
+    { "Abweichende Bereichsmonate", @"0" },
+    { "Bereichsmonate Gesamt", @"0" },
+    { "Konten Gesamt (Anzahl)", @"0" },
+    { "Konten außerhalb Toleranz (Anzahl)", @"0" },
+
+    // ── Custom: erzwungenes Vorzeichen + Einheit ───────────────────────────
+    // nicht über die Oberfläche erzeugbar
+    { "DB I Marge Abweichung Vorjahr pp", @"+0.0"" pp"";-0.0"" pp"";0.0"" pp""" },
+    { "DB I Marge Abweichung pp", @"+0.0"" pp"";-0.0"" pp"";0.0"" pp""" },
 };
 
 foreach(var d in defs) {
-    t.AddMeasure(d.Name, Dedent(d.Dax), d.Folder);
+    var m = t.AddMeasure(d.Name, Dedent(d.Dax), d.Folder);
+    if (formats.ContainsKey(d.Name)) m.FormatString = formats[d.Name];
 }

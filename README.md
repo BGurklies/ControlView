@@ -18,7 +18,7 @@ Die Architektur folgt einem klassischen ELT-Ansatz mit drei Schichten: `raw`, `m
 
 ## Unternehmenskontext
 
-Die Produktstruktur umfasst vier Warengruppen und einen Gemeinkosten-Sammler und spiegelt eine reale Branchendynamik: Endgeräte (Smartphones, Notebooks, Smart Home) sind margenschwaches Volumengeschäft mit hohem Preisdruck durch Vergleichsportale und geringe Produktdifferenzierung. Zubehör (Eigenmarke) trägt dagegen die eigentliche Marge. Vor diesem Hintergrund ist der Deckungsbeitrag I je Warengruppe, nicht nur die GuV insgesamt, die zentrale Analyseebene des Dashboards (Seite 5: Produktmargen).
+Die Produktstruktur umfasst fünf Warengruppen und einen Gemeinkosten-Sammler und spiegelt eine reale Branchendynamik: Smartphones & Tablets sowie Notebooks & PC sind margenschwaches Volumengeschäft mit hohem Preisdruck durch Vergleichsportale und geringe Produktdifferenzierung. Audio & Wearables und Smart Home erzielen als differenziertere Sortimente mittlere Margen, das Eigenmarken-Zubehör die höchste. Vor diesem Hintergrund ist der Deckungsbeitrag I je Warengruppe, nicht nur die GuV insgesamt, die zentrale Analyseebene des Dashboards (Seite 5: Produktmargen).
 
 ### Warengruppen
 
@@ -184,13 +184,15 @@ Beantwortet nicht nur, dass das EBIT vom Plan abweicht (Seite 1), sondern worin 
 
 ### Seite 4: Kostencontrolling
 
-Beantwortet, welche Kostenstelle die OpEx verantwortet und wo die Kosten schwanken: die organisatorische Sicht auf dieselbe GuV, unabhängig von der Konto- (Seite 2/3) und Produktsicht (Seite 5). Ergänzt um die Personal-/Sachkosten-Aufteilung, einen Ausreißer-Zähler auf Monatsebene, den Bereichsvergleich Ist-Plan und den Kostenstellenbericht je Kostenstelle.
+Beantwortet, welche Kostenstelle die OpEx verantwortet und wo die Kosten schwanken: die organisatorische Sicht auf dieselbe GuV, unabhängig von der Konto- (Seite 2/3) und Produktsicht (Seite 5). Ergänzt um die Personal-/Sachkosten-Aufteilung je Bereich, einen Ausreißer-Zähler auf Monatsebene, den Abweichungsverlauf im Jahr und den Kostenstellenbericht je Kostenstelle.
 
 ![Kostencontrolling](docs/images/dashboard/page4_kostencontrolling.png)
 
 ### Seite 5: Produktmargen
 
-*In Arbeit.* Beantwortet, welche Warengruppe tatsächlich Geld verdient: dünnmargige Endgeräte vs. hochmargiges Eigenmarke-Zubehör im Deckungsbeitrag I.
+Beantwortet, womit tatsächlich Geld verdient wird: Umsatzanteil und Ergebnisbeitrag fallen auseinander. Gemessen als Hebel, also Deckungsbeitragsanteil je Umsatzanteil, erreicht das Eigenmarken-Zubehör 2,8× (23,6% des Deckungsbeitrags aus 8,3% Umsatz), das Volumengeschäft nur 0,6× (40,1% aus 65,4%). Die Seite zeigt den Deckungsbeitrag I je Warengruppe absolut und als Marge, dazu die Margenabweichung zu Plan und Vorjahr.
+
+![Produktmargen](docs/images/dashboard/page5_produktmargen.png)
 
 DAX Measures: [`powerbi/te_create_measures.csx`](powerbi/te_create_measures.csx)
 
@@ -269,6 +271,6 @@ ControlView/
 | Power BI Reporting: Seite 2: GuV-Struktur | Abgeschlossen |
 | Power BI Reporting: Seite 3: Abweichungsanalyse | Abgeschlossen |
 | Power BI Reporting: Seite 4: Kostencontrolling | Abgeschlossen |
-| Power BI Reporting: Seite 5: Produktmargen | In Arbeit |
+| Power BI Reporting: Seite 5: Produktmargen | Abgeschlossen |
 
 
