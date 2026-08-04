@@ -96,8 +96,8 @@ def generate_kostenstellen():
         ("KST-300", "Kundenservice",                     "Service",     "EMP-3007"),
         ("KST-310", "Retouren & Reklamation",            "Service",     "EMP-3019"),
         # Logistik
-        ("KST-400", "Lager & Kommissionierung",          "Logistik",    "EMP-4005"),
-        ("KST-410", "Versand & Fulfillment",             "Logistik",    "EMP-4017"),
+        ("KST-400", "Lagerhaltung & Bestand",            "Logistik",    "EMP-4005"),
+        ("KST-410", "Distribution",                      "Logistik",    "EMP-4017"),
         ("KST-420", "Wareneingang",                      "Logistik",    "EMP-4028"),
         # Verwaltung
         ("KST-500", "Finance & Controlling",             "Verwaltung",  "EMP-5002"),
