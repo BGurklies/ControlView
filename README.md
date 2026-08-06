@@ -62,8 +62,17 @@ Die Kaskade zeigt den Weg vom Umsatz zum operativen Ergebnis in zwei Stufen. Der
 
 - **Plan-Daten:** tragen bereits die erwartete Saisonkurve (Q4-lastig, Weihnachtsgeschäft; Frühjahr/Sommer schwach).
 - **Ist-Daten:** weichen vom saisonalen Plan durch Erlös-/Kosten-Schwankung je Konto (±10% / ±4%) sowie einen gemeinsamen Monatsfaktor ab, der alle Konten gleichzeitig um bis zu ±5% verschiebt (simuliert monatsweite externe Einflüsse wie Nachfrageschwankungen).
-- **Wachstum (Umsatz YoY):** 2023 = +7,0% / 2024 = +7,5% (jeweils ggü. Vorjahr).
+- **Plan-Wachstum (Umsatz YoY):** 2023 = +7,0% / 2024 = +7,5% (jeweils ggü. Vorjahr).
 - **Plan EBIT-Basis 2022:** ~7% Marge (~175k/Mo EBIT auf ~2.500k/Mo Erlöse)
+
+### Nachgelagerte Korrekturen
+
+Zwei Durchläufe überschreiben nach der Zufallsziehung gezielt Ist-Erlöse. Sie gehören zur Plausibilisierung des Datensatzes, nicht zum Zufallsmodell, und betreffen zusammen 9 der 36 Ist-Monate:
+
+- **Margenboden** (`apply_ebit_floor`): Fällt die EBIT-Marge eines Ist-Monats unter 2%, werden die Erlösbuchungen dieses Monats proportional hochskaliert. Verlustmonate wären in einem durchgehend profitablen Handelsmodell unplausibel. Sieben Monate liegen dadurch exakt auf 2,0%.
+- **Q1-Korrektur 2024** (`apply_q1_2024_correction`): Januar bis März 2024 werden auf die Durchschnittsmarge des jeweiligen Vorjahresmonats skaliert (3,2% / 2,0% / 6,75%). Die Zufallsziehung hatte für Januar 2024 eine Marge von 9,95% erzeugt und damit das in 2022 und 2023 konsistent margenschwache Q1-Muster gebrochen, was im YoY-Verlauf einen Ausschlag von rund 200% ergab.
+
+Beide Eingriffe wirken ausschließlich auf Ist-Erlöse. Plan-Werte, Kostenbuchungen und die Wachstumsmultiplikatoren bleiben unberührt. 
 
 ---
 
@@ -155,6 +164,8 @@ erDiagram
 - `dim_product`: Warengruppenstamm mit Typ und Margenklasse (siehe Unternehmenskontext).
 - `dim_scenario` unterscheidet Plan (Budget) von Ist (tatsächliche Buchungen). Beide Szenarien liegen in derselben Faktentabelle, wodurch Ist-Plan-Vergleiche ohne zusätzlichen Join möglich sind.
 - `dim_cost_type` unterscheidet variable Kosten (einer Warengruppe direkt zurechenbar über `mart.konto_produkt_mapping`) von Fixkosten (Gemeinkosten, laufen auf PRD-900). Diese Trennung ist die Grundlage der Deckungsbeitragsrechnung.
+
+Die View `mart.v_pl_monthly` joint alle Dimensionen vorzeichenkorrekt auf die Faktentabelle und dient Ad-hoc-Auswertungen direkt auf der Datenbank.
 
 ---
 
