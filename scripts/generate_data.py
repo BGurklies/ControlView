@@ -25,7 +25,7 @@ Saisonalitaet:
          Erloes-Varianz: +/-10% (0.90-1.10 x plan_base), Kosten-Varianz: +/-4% (0.96-1.04 x plan_base)
          Jahr-Shape: +/-5% pro Jahr/Monat
 
-Wachstum: 2023 +7,0% ggue. Vorjahr, 2024 +7,5% ggue. Vorjahr
+Plan-Wachstum: 2023 +7,0% ggue. Vorjahr, 2024 +7,5% ggue. Vorjahr
 (growth-Werte im Code sind Multiplikatoren auf die fixe 2022-Basis, kein Kettenwachstum)
 
 Plan EBIT-Basis 2022: ~7% Marge (Details siehe base_plan in generate_buchungsjournal)
@@ -50,6 +50,30 @@ MONTH_NAMES_DE = {
     5: "Mai", 6: "Juni", 7: "Juli", 8: "August",
     9: "September", 10: "Oktober", 11: "November", 12: "Dezember"
 }
+
+EBIT_FLOOR      = 0.02
+Q1_2024_TARGETS = {1: 0.032, 2: 0.020, 3: 0.0675}   # Ø-Marge aus 2022/2023 je Monat
+
+EXPECTED_ROWS        = 4824
+EXPECTED_ACCOUNTS    = 21
+EXPECTED_COSTCENTERS = 14
+EXPECTED_MONTHS      = 36
+
+# "Plan" ist deterministisch und haengt nur an base_plan, growth und den Saisonfaktoren.
+EXPECTED_PLAN = {
+    2022: {"revenue": 30_000_000.00, "ebit": 2_100_000.00},
+    2023: {"revenue": 32_100_000.00, "ebit": 2_246_999.99},
+    2024: {"revenue": 34_500_000.00, "ebit": 2_415_000.00},
+}
+
+# "Ist" ist das Ergebnis des Laufs mit SEED = 42 und prüft auf unbeabsichtigte Verschiebungen.
+EXPECTED_ACTUAL = {
+    2022: {"revenue": 29_976_990.35, "ebit": 2_001_074.64},
+    2023: {"revenue": 31_720_677.43, "ebit": 2_255_980.65},
+    2024: {"revenue": 34_202_267.67, "ebit": 2_135_582.49},
+}
+
+TOLERANCE_EUR = 0.005   # halber Cent; darunter liegt nur Float-Rauschen
 
 
 def generate_kontenplan():
@@ -147,7 +171,7 @@ def generate_buchungsjournal():
         "5000": 1_820_000, # Wareneinsatz Handelswaren
         "5100":  90_000,   # Versand & Fulfillment
         "5200":  55_000,   # Payment- & Transaktionsgebuehren
-        "5300":  57_000,   # Retourenkosten & Wertberichtigung
+        "5300":  57_000,   # Retourenkosten & Wertminderung
         # Personalkosten (6xxx)
         "6000":  40_000,   # Gehaelter Einkauf & Category Management
         "6010":  46_000,   # Gehaelter Marketing & E-Commerce
@@ -158,8 +182,8 @@ def generate_buchungsjournal():
         # Sachkosten (6xxx)
         "6300":  48_000,   # Performance Marketing & Werbung
         "6400":  12_000,   # Software, Shop & Tools
-        "6500":  20_000,   # Lager & Logistik
-        "6600":   8_000,   # IT & Zahlungsinfrastruktur
+        "6500":  20_000,   # Lagerinfrastruktur
+        "6600":   8_000,   # IT-Infrastruktur & Zahlungssysteme
         "6700":   6_000,   # Abschreibungen
         "6800":   5_000,   # Sonstige Betriebskosten
     }
@@ -320,7 +344,7 @@ def generate_buchungsjournal():
     return pd.DataFrame(records)
 
 
-def apply_ebit_floor(df, min_margin=0.02):
+def apply_ebit_floor(df, min_margin=EBIT_FLOOR):
     """
     Stellt sicher dass kein Ist-Monat unter min_margin EBIT-Marge faellt.
     Falls doch: Erloesbuchungen des Monats proportional hochskalieren bis Marge = min_margin.
@@ -353,11 +377,12 @@ def apply_q1_2024_correction(df):
     Q1-Saisonmuster ab (Jan/Feb sind strukturell die margenschwaechsten Monate).
     Skaliert Erloesbuchungen je Monat auf den Durchschnitt des jeweiligen
     Vorjahresmonats (Ø aus 2022 und 2023), analog zur apply_ebit_floor-Logik.
+
+    targets stammen aus dem Output von SEED = 42; sie muessten bei anderem Seed neu bestimmt werden.
     """
-    targets = {1: 0.032, 2: 0.020, 3: 0.0675}   # Ø-Marge aus 2022/2023 je Monat
     ist_mask = df["szenario"] == "Ist"
 
-    for month, target_margin in targets.items():
+    for month, target_margin in Q1_2024_TARGETS.items():
         mask      = ist_mask & (df["geschaeftsjahr"] == 2024) & (df["periode"] == month)
         rev_mask  = mask & (df["soll_haben"] == "H")
         cost_mask = mask & (df["soll_haben"] == "S")
@@ -372,32 +397,85 @@ def apply_q1_2024_correction(df):
     return df
 
 
+def _monthly_margins(df, scenario="Ist"):
+    """EBIT-Marge je Geschaeftsjahr und Periode."""
+    rows    = df[df["szenario"] == scenario]
+    revenue = rows[rows["soll_haben"] == "H"].groupby(["geschaeftsjahr", "periode"])["betrag"].sum()
+    costs   = rows[rows["soll_haben"] == "S"].groupby(["geschaeftsjahr", "periode"])["betrag"].sum()
+    return (revenue - costs) / revenue
+
+
+def verify(df):
+    """
+    Prueft das Journal gegen Strukturgroessen, gegen die Nachbedingungen der beiden
+    Korrekturfunktionen und gegen die Kennzahlen des Referenzlaufs.
+
+    Sammelt alle Abweichungen und wirft erst am Ende, damit ein Lauf das
+    vollstaendige Bild liefert statt nur des ersten Treffers.
+    """
+    log    = logging.getLogger(__name__)
+    errors = []
+    checks = 0
+
+    def check(label, actual, expected, tolerance, fmt="{:,.2f}"):
+        nonlocal checks
+        checks += 1
+        if abs(actual - expected) > tolerance:
+            errors.append(f"{label}: {fmt.format(actual)} statt {fmt.format(expected)}")
+            log.warning("  %-18s %16s  ERWARTET %s", label, fmt.format(actual), fmt.format(expected))
+        else:
+            log.info("  %-18s %16s  ok", label, fmt.format(actual))
+
+    def require(condition, message):
+        nonlocal checks
+        checks += 1
+        if not condition:
+            errors.append(message)
+
+    check("Zeilen",         len(df),                         EXPECTED_ROWS,        0, "{:,.0f}")
+    check("Konten",         df["konto_id"].nunique(),        EXPECTED_ACCOUNTS,    0, "{:,.0f}")
+    check("Kostenstellen",  df["kostenstelle_id"].nunique(), EXPECTED_COSTCENTERS, 0, "{:,.0f}")
+    check("Buchungsmonate", df["buchungsdatum"].nunique(),   EXPECTED_MONTHS,      0, "{:,.0f}")
+
+    require((df["betrag"] > 0).all(),
+            "Betraege <= 0 im Journal; die Richtung gehoert in soll_haben")
+
+    margins     = _monthly_margins(df)
+    below_floor = margins[margins < EBIT_FLOOR - 1e-5]
+    require(len(below_floor) == 0,
+            f"{len(below_floor)} Ist-Monat(e) unter dem Margenboden von {EBIT_FLOOR:.0%}")
+    for month, target in Q1_2024_TARGETS.items():
+        check(f"Marge 2024-{month:02d}", margins[(2024, month)], target, 1e-5, "{:.4%}")
+
+    for scenario, expected in (("Plan", EXPECTED_PLAN), ("Ist", EXPECTED_ACTUAL)):
+        for year, values in expected.items():
+            rows    = df[(df["szenario"] == scenario) & (df["geschaeftsjahr"] == year)]
+            revenue = rows[rows["soll_haben"] == "H"]["betrag"].sum()
+            ebit    = revenue - rows[rows["soll_haben"] == "S"]["betrag"].sum()
+            check(f"{scenario}-Umsatz {year}", revenue, values["revenue"], TOLERANCE_EUR)
+            check(f"{scenario}-EBIT {year}",   ebit,    values["ebit"],    TOLERANCE_EUR)
+
+    if errors:
+        raise AssertionError("Datensatz weicht vom Referenzlauf ab:\n  " + "\n  ".join(errors))
+    log.info("  %-18s %16s  ok", "Verifikation", f"{checks} Pruefungen")
+
+
 if __name__ == "__main__":
     log = logging.getLogger(__name__)
 
-    df_kp = generate_kontenplan()
-    df_kp.to_csv(OUTPUT_DIR / "kontenplan.csv", index=False)
-    log.info("kontenplan.csv          %d rows", len(df_kp))
-
-    df_ks = generate_kostenstellen()
-    df_ks.to_csv(OUTPUT_DIR / "kostenstellen.csv", index=False)
-    log.info("kostenstellen.csv       %d rows", len(df_ks))
-
-    df_pk = generate_produktkatalog()
-    df_pk.to_csv(OUTPUT_DIR / "produktkatalog.csv", index=False)
-    log.info("produktkatalog.csv      %d rows", len(df_pk))
-
     df_bj = generate_buchungsjournal()
-    df_bj = apply_ebit_floor(df_bj, min_margin=0.02)
+    df_bj = apply_ebit_floor(df_bj)
     df_bj = apply_q1_2024_correction(df_bj)
-    df_bj.to_csv(OUTPUT_DIR / "buchungsjournal.csv", index=False)
-    log.info("buchungsjournal.csv     %d rows", len(df_bj))
 
-    # Plausibilitaetspruefung Plan je Jahr
-    for year in (2022, 2023, 2024):
-        plan_year = df_bj[(df_bj["geschaeftsjahr"] == year) & (df_bj["szenario"] == "Plan")]
-        rev       = plan_year[plan_year["konto_id"].str.startswith("4")]["betrag"].sum()
-        all_costs = plan_year[plan_year["konto_id"].str.startswith(("5", "6"))]["betrag"].sum()
-        ebit      = rev - all_costs
-        log.info("Plan %d - Umsatz: %s EUR | Kosten: %s EUR | EBIT: %s EUR (%.1f%%)",
-                 year, f"{rev:,.0f}", f"{all_costs:,.0f}", f"{ebit:,.0f}", ebit / rev * 100)
+    outputs = {
+        "kontenplan.csv":      generate_kontenplan(),
+        "kostenstellen.csv":   generate_kostenstellen(),
+        "produktkatalog.csv":  generate_produktkatalog(),
+        "buchungsjournal.csv": df_bj,
+    }
+
+    # vor dem Schreiben: ein abweichender Lauf ueberschreibt die vorhandenen CSVs nicht
+    verify(df_bj)
+
+    for name, df in outputs.items():
+        df.to_csv(OUTPUT_DIR / name, index=False)
