@@ -8,7 +8,7 @@
 --     -> Eine Zeile mit PRD-900 Gemeinkosten
 --     -> cost_type = 'fix'
 --
--- Betraege bleiben vorzeichenlos; Vorzeichen wird in der View (v_pl_monthly) per mart.dim_account.sign aufgeloest.
+-- Betraege bleiben vorzeichenlos; das Vorzeichen loest erst das Power-BI-Modell per mart.dim_account.sign auf.
 
 CREATE OR ALTER PROCEDURE mart.sp_load_fact_journal
 AS
@@ -33,7 +33,7 @@ BEGIN
             p.product_key,
             ct.cost_type_key,
             sc.scenario_key,
-            ROUND(src.betrag * src.gewicht, 2)                      AS amount,
+            CAST(src.betrag * src.gewicht AS DECIMAL(18,6))          AS amount,
             'EUR'                                                    AS currency,
             YEAR(src.buchungsdatum)                                  AS year,
             MONTH(src.buchungsdatum)                                 AS month,

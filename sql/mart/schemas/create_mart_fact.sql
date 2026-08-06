@@ -11,7 +11,7 @@ CREATE TABLE mart.fact_journal (
     product_key    INT           NOT NULL,
     cost_type_key  INT           NOT NULL,
     scenario_key   INT           NOT NULL,
-    amount         DECIMAL(18,2) NOT NULL,  
+    amount         DECIMAL(18,6) NOT NULL,
     currency       CHAR(3)       NOT NULL CONSTRAINT DF_fact_journal_currency DEFAULT 'EUR',
     year           SMALLINT      NOT NULL,
     month          TINYINT       NOT NULL,
