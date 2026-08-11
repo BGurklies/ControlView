@@ -2,15 +2,15 @@
 
 ControlView ist eine Controlling- und BI-Lösung für einen modellierten mittelständischen Online-Händler: von der Rohdatengenerierung nach deutschen Buchhaltungsstandards über einen SQL Server Controlling Data Mart bis zum Power BI Reporting.
 
-Modelliert wird ein Online-Händler für Consumer Electronics (~50 MA, ~32M EUR Umsatz), der seine Produkte über einen eigenen Online-Shop vertreibt.
+Modelliert wird ein Online-Händler für Consumer Electronics (~50 MA, ~32 Mio. € Umsatz), der seine Produkte über einen eigenen Online-Shop vertreibt.
 
- Das Power BI Dashboard bildet die vollständige operative GuV-Kaskade ab, von Umsatz über Deckungsbeitrag I bis EBIT, aufgeteilt auf fünf Reporting-Seiten: Übersicht, GuV-Struktur, Abweichungsanalyse, Kostencontrolling und Produktmargen.
+Das Power BI Dashboard bildet die vollständige operative GuV-Kaskade ab, von Umsatz über Deckungsbeitrag I bis EBIT, aufgeteilt auf fünf Reporting-Seiten: Übersicht, GuV-Struktur, Abweichungsanalyse, Kostencontrolling und Produktmargen.
 
 ---
 
 ## Architektur
 
-<img alt="Architecture" src="docs/images/architecture/architecture.svg" />
+<img alt="Architektur" src="docs/images/architecture/architecture.svg" />
 
 Die Architektur folgt einem klassischen ELT-Ansatz mit drei Schichten: `raw`, `mart` und dem Power BI Semantic Model. Die Pipeline lädt die generierten Rohdaten unverändert in die `raw`-Schicht (1:1-Abbild der CSV-Quellen) und reichert sie beim Laden in die `mart`-Schicht mit Controlling-Logik an (GuV-Zuordnung inkl. Vorzeichenlogik, Kostenträgerrechnung, variable/fixe Kostenklassifizierung). Jeder Lauf baut den gesamten Datenbestand vollständig neu auf (Full Reload). Das daraus entstehende Star-Schema bildet die Datengrundlage für das Power BI Reporting, den Kern des Projekts.
 
@@ -37,9 +37,9 @@ Der Kontenplan folgt dem SKR04 (Standardkontenrahmen 04), dem in Deutschland geb
 
 | Bereich | Kontenklasse | Beispiel-Konto |
 |---------|--------------|----------|
-| Umsatzerlöse | 4xxx | 4400: „Umsatzerlöse Smart Home" |
-| Variable Kosten (COGS) | 5xxx | 5000: „Wareneinsatz Handelswaren" |
-| Personal-/Sachkosten (OpEx) | 6xxx | 6000: „Gehälter Einkauf & Category Management", 6300: „Performance Marketing & Werbung" |
+| Umsatzerlöse | 4xxx | 4400: „Umsatzerlöse Smart Home“ |
+| Variable Kosten (COGS) | 5xxx | 5000: „Wareneinsatz Handelswaren“ |
+| Personal-/Sachkosten (OpEx) | 6xxx | 6000: „Gehälter Einkauf & Category Management“, 6300: „Performance Marketing & Werbung“ |
 
 ### GuV-Kaskade
 
@@ -56,14 +56,14 @@ Die Kaskade zeigt den Weg vom Umsatz zum operativen Ergebnis in zwei Stufen. Der
 | Datei | Inhalt |
 |-------|--------|
 | `buchungsjournal.csv` | GL-Buchungen (Ist + Plan, 2022–2024, SKR04) |
-| `kontenplan.csv` | Kontenstamm (Umsatzerlöse,variable Kosten (COGS), Personal-/Sachkosten (OpEx)) |
+| `kontenplan.csv` | Kontenstamm (Umsatzerlöse, variable Kosten (COGS), Personal-/Sachkosten (OpEx)) |
 | `kostenstellen.csv` | Kostenstellenstamm nach Funktionsbereich |
 | `produktkatalog.csv` | Warengruppenstamm mit Margenklasse |
 
 - **Plan-Daten:** tragen bereits die erwartete Saisonkurve (Q4-lastig, Weihnachtsgeschäft; Frühjahr/Sommer schwach).
 - **Ist-Daten:** weichen vom saisonalen Plan durch Erlös-/Kosten-Schwankung je Konto (±10% / ±4%) sowie einen gemeinsamen Monatsfaktor ab, der alle Konten gleichzeitig um bis zu ±5% verschiebt (simuliert monatsweite externe Einflüsse wie Nachfrageschwankungen).
 - **Plan-Wachstum (Umsatz YoY):** 2023 = +7,0% / 2024 = +7,5% (jeweils ggü. Vorjahr).
-- **Plan EBIT-Basis 2022:** ~7% Marge (~175k/Mo EBIT auf ~2.500k/Mo Erlöse)
+- **Plan EBIT-Basis 2022:** ~7% Marge (~175 Tsd./Mo EBIT auf ~2,5 Mio./Mo Erlöse).
 
 ### Nachgelagerte Korrekturen
 
@@ -72,13 +72,13 @@ Zwei Durchläufe überschreiben nach der Zufallsziehung gezielt Ist-Erlöse. Sie
 - **Margenboden** (`apply_ebit_floor`): Fällt die EBIT-Marge eines Ist-Monats unter 2%, werden die Erlösbuchungen dieses Monats proportional hochskaliert. Verlustmonate wären in einem durchgehend profitablen Handelsmodell unplausibel. Sieben Monate liegen dadurch exakt auf 2,0%.
 - **Q1-Korrektur 2024** (`apply_q1_2024_correction`): Januar bis März 2024 werden auf die Durchschnittsmarge des jeweiligen Vorjahresmonats skaliert (3,2% / 2,0% / 6,75%). Die Zufallsziehung hatte für Januar 2024 eine Marge von 9,95% erzeugt und damit das in 2022 und 2023 konsistent margenschwache Q1-Muster gebrochen, was im YoY-Verlauf einen Ausschlag von rund 200% ergab.
 
-Beide Eingriffe wirken ausschließlich auf Ist-Erlöse. Plan-Werte, Kostenbuchungen und die Wachstumsmultiplikatoren bleiben unberührt. 
+Beide Eingriffe wirken ausschließlich auf Ist-Erlöse. Plan-Werte, Kostenbuchungen und die Wachstumsmultiplikatoren bleiben unberührt.
 
 ---
 
 ## Data Mart: Star-Schema
 
-Der Mart-Layer bildet das auswertungsbereite Datenmodell: ein Star Schema mit 6 Dimensionen und einer Faktentabelle, das direkt als Datenquelle für das Power BI Dashboard dient.
+Der Mart-Layer bildet das auswertungsbereite Datenmodell: ein Star-Schema mit 6 Dimensionen und einer Faktentabelle, das direkt als Datenquelle für das Power BI Dashboard dient.
 
 ```mermaid
 erDiagram
@@ -172,6 +172,8 @@ Die View `mart.v_pl_monthly` joint alle Dimensionen vorzeichenkorrekt auf die Fa
 ## Power BI Dashboard
 
 Fünf Reporting-Seiten decken die klassischen Controlling-Perspektiven ab: Executive-Überblick mit den zentralen Gesamtkennzahlen, die strukturelle Zusammensetzung der GuV, die Abweichungsanalyse im Zeitverlauf, die Kostenstellenanalyse und die Produktprofitabilität.
+
+Der Aufbau folgt den drei Stufen der Kostenrechnung: dieselbe GuV nach Kostenarten und Konten (Seiten 2 und 3), nach Kostenstellen (Seite 4) und nach Kostenträgern (Seite 5).
 
 ### Seite 1: Übersicht
 
@@ -269,19 +271,34 @@ ControlView/
 
 ---
 
-## Status
+## Projektumfang
 
-| Komponente | Status |
-|------------|--------|
-| Datengenerator | Abgeschlossen |
-| Raw-Layer: Tabellen und Stored Procedures (je 4 Entitäten) | Abgeschlossen |
-| Mart-Layer: 6 Dimensionen + fact_journal | Abgeschlossen |
-| ELT-Orchestrierung | Abgeschlossen |
-| Power BI Semantic Model | Abgeschlossen |
-| Power BI Reporting: Seite 1: Übersicht | Abgeschlossen |
-| Power BI Reporting: Seite 2: GuV-Struktur | Abgeschlossen |
-| Power BI Reporting: Seite 3: Abweichungsanalyse | Abgeschlossen |
-| Power BI Reporting: Seite 4: Kostencontrolling | Abgeschlossen |
-| Power BI Reporting: Seite 5: Produktmargen | Abgeschlossen |
+| Komponente                                                  |
+| ----------------------------------------------------------- |
+| Datengenerator                                              |
+| Raw-Layer: Tabellen und Stored Procedures (je 4 Entitäten)  |
+| Mart-Layer: 6 Dimensionen, fact_journal, Referenz-Mapping   |
+| ELT-Orchestrierung                                          |
+| Power BI Semantic Model                       |
+| Power BI Reporting: Seite 1 (Übersicht)                     |
+| Power BI Reporting: Seite 2 (GuV-Struktur)                  |
+| Power BI Reporting: Seite 3 (Abweichungsanalyse)            |
+| Power BI Reporting: Seite 4 (Kostencontrolling)             |
+| Power BI Reporting: Seite 5 (Produktmargen)                 |
 
+---
 
+## Ausblick
+
+Das Projekt ist ein Ergebniscontrolling, also Steuerung über die GuV. Vier angrenzende Felder wären die nächsten Ausbaustufen:
+
+- **Liquidität und Kapitalbindung.** Die Faktentabelle enthält ausschließlich GuV-Buchungen. Bilanzpositionen würden Cashflow, Working Capital und Kapitalrenditen erschließen und damit die Frage beantworten, ob ein profitables Geschäft auch liquide ist.
+- **Forecast.** Das Szenario-Modell kennt Ist und Plan. Der Dreiklang aus Ist, Plan und rollierendem Forecast würde die Jahresendhochrechnung und die Prognosegüte messbar machen.
+- **Preis-Mengendaten.** Gebucht werden Beträge, keine Mengen und Preise. Mengenangaben würden die Umsatzabweichung in Preis- und Mengeneffekt zerlegen und damit beantworten, ob ein Umsatzplus auf Absatz oder auf Preisdurchsetzung beruht.
+- **Vertriebskanäle.** Der Händler vertreibt über einen eigenen Shop. Eine Kanaldimension würde kanalspezifische Kostenstrukturen sichtbar machen, etwa Marktplatzprovisionen, die je nach Plattform und Warengruppe rund 5 bis 11% des dort erzielten Umsatzes binden.
+
+---
+
+## Lizenz
+
+MIT-Lizenz, siehe [LICENSE](LICENSE).

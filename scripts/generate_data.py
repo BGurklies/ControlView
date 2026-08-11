@@ -68,9 +68,9 @@ EXPECTED_PLAN = {
 
 # "Ist" ist das Ergebnis des Laufs mit SEED = 42 und prüft auf unbeabsichtigte Verschiebungen.
 EXPECTED_ACTUAL = {
-    2022: {"revenue": 29_976_990.35, "ebit": 2_001_074.64},
-    2023: {"revenue": 31_720_677.43, "ebit": 2_255_980.65},
-    2024: {"revenue": 34_202_267.67, "ebit": 2_135_582.49},
+    2022: {"revenue": 29_978_623.69, "ebit": 2_002_559.61},
+    2023: {"revenue": 31_721_395.94, "ebit": 2_256_812.01},
+    2024: {"revenue": 34_206_648.49, "ebit": 2_140_147.24},
 }
 
 TOLERANCE_EUR = 0.005   # halber Cent; darunter liegt nur Float-Rauschen
@@ -280,6 +280,10 @@ def generate_buchungsjournal():
         11: 1.20,
         12: 1.03,
     }
+    # Planbestimmte Konten ohne Saisonbezug: Abschreibungen folgen dem AfA-Plan,
+    # die betriebliche Altersvorsorge dem Grundgehalt. 
+    seasonality_flat = {m: 1.00 for m in range(1, 13)}
+    non_seasonal     = {"6200", "6700"}
 
     # per-year noise - verhindert identische Saisonkurven ueber Jahre
     year_shape = {
@@ -307,8 +311,13 @@ def generate_buchungsjournal():
             is_variabel = konto_id.startswith(("4", "5"))
             soll_haben = "H" if is_erloes else "S"
             # COGS (5xxx) ist variabel und skaliert mit dem Umsatzvolumen (seasonality_revenue);
-            # nur echte Fixkosten (6xxx) folgen der gedaempften seasonality_cost.
-            season = seasonality_revenue if is_variabel else seasonality_cost
+            # uebrige Fixkosten (6xxx) folgen der gedaempften seasonality_cost.
+            if konto_id in non_seasonal:
+                season = seasonality_flat
+            elif is_variabel:
+                season = seasonality_revenue
+            else:
+                season = seasonality_cost
             area   = account_area[konto_id]
             text   = f"{buchungstext_map[konto_id]} {monat_name} {year}"
 
