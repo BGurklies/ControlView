@@ -215,6 +215,8 @@ DAX Measures: [`powerbi/te_create_measures.csx`](powerbi/te_create_measures.csx)
 
 ```
 ControlView/
+├── data/
+│   └── raw/         # CSVs, nicht versioniert
 ├── docs/
 │   └── images/
 │       ├── architecture/
@@ -225,6 +227,7 @@ ControlView/
 │           ├── page2_guv-struktur.png
 │           └── ...
 ├── powerbi/
+│   ├── report/      # PBIP, nicht versioniert
 │   ├── control-view_theme.json
 │   └── te_create_measures.csx
 ├── scripts/
@@ -253,6 +256,8 @@ ControlView/
 │   │   └── orchestration_sp_run_full_load.sql
 │   └── views/
 │       └── v_pl_monthly.sql
+├── LICENSE
+└── requirements.txt
 ```
 
 ---
