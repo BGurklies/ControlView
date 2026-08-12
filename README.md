@@ -12,7 +12,7 @@ Das Power BI Dashboard bildet die vollständige operative GuV-Kaskade ab, von Um
 
 <img alt="Architektur" src="docs/images/architecture/architecture.svg" />
 
-Die Architektur folgt einem klassischen ELT-Ansatz mit drei Schichten: `raw`, `mart` und dem Power BI Semantic Model. Die Pipeline lädt die generierten Rohdaten unverändert in die `raw`-Schicht (1:1-Abbild der CSV-Quellen) und reichert sie beim Laden in die `mart`-Schicht mit Controlling-Logik an (GuV-Zuordnung inkl. Vorzeichenlogik, Kostenträgerrechnung, variable/fixe Kostenklassifizierung). Jeder Lauf baut den gesamten Datenbestand vollständig neu auf (Full Reload). Das daraus entstehende Star-Schema bildet die Datengrundlage für das Power BI Reporting, den Kern des Projekts.
+Die Architektur folgt einem klassischen ELT-Ansatz mit drei Schichten: `raw`, `mart` und dem Power BI Semantic Model. Die Pipeline lädt die generierten Rohdaten unverändert in die `raw`-Schicht (1:1-Abbild der CSV-Quellen) und reichert sie beim Laden in die `mart`-Schicht mit Controlling-Logik an (GuV-Zuordnung inkl. Vorzeichenlogik, Kostenträgerrechnung, variable/fixe Kostenklassifizierung). Jeder Lauf baut den gesamten Datenbestand vollständig neu auf (Full Reload). Der Ladeprozess läuft automatisiert über einen SQL Server Agent-Job. Das daraus entstehende Star-Schema bildet die Datengrundlage für das Power BI Reporting, den Kern des Projekts.
 
 ---
 
@@ -215,8 +215,39 @@ DAX Measures: [`powerbi/te_create_measures.csx`](powerbi/te_create_measures.csx)
 
 ```
 ControlView/
+├── scripts/
+│   └── generate_data.py
 ├── data/
 │   └── raw/         # CSVs, nicht versioniert
+├── sql/
+│   ├── setup/
+│   │   └── schemas/
+│   │       └── create_schema.sql
+│   ├── raw/
+│   │   ├── schemas/
+│   │   │   └── create_raw_tables.sql
+│   │   └── procedures/
+│   │       ├── raw_sp_load_kontenplan.sql
+│   │       ├── ...
+│   │       └── raw_sp_load_buchungsjournal.sql
+│   ├── mart/
+│   │   ├── schemas/
+│   │   │   ├── create_mart_dims.sql
+│   │   │   ├── create_mart_fact.sql
+│   │   │   └── create_mart_reference.sql
+│   │   └── procedures/
+│   │       ├── mart_sp_load_dim_account.sql
+│   │       ├── ...
+│   │       └── mart_sp_load_fact_journal.sql
+│   ├── orchestration/
+│   │   ├── orchestration_sp_run_full_load.sql
+│   │   └── agent_job_full_load.sql
+│   └── views/
+│       └── v_pl_monthly.sql
+├── powerbi/
+│   ├── report/      # PBIP, nicht versioniert
+│   ├── control-view_theme.json
+│   └── te_create_measures.csx
 ├── docs/
 │   └── images/
 │       ├── architecture/
@@ -226,36 +257,6 @@ ControlView/
 │           ├── page1_uebersicht.png
 │           ├── page2_guv-struktur.png
 │           └── ...
-├── powerbi/
-│   ├── report/      # PBIP, nicht versioniert
-│   ├── control-view_theme.json
-│   └── te_create_measures.csx
-├── scripts/
-│   └── generate_data.py
-├── sql/
-│   ├── setup/
-│   │   └── schemas/
-│   │       └── create_schema.sql
-│   ├── raw/
-│   │   ├── schemas/
-│   │   │   └── create_raw_tables.sql
-│   │   └── procedures/
-│   │       ├── raw_sp_load_buchungsjournal.sql
-│   │       ├── raw_sp_load_kontenplan.sql
-│   │       └── ...
-│   ├── mart/
-│   │   ├── schemas/
-│   │   │   ├── create_mart_dims.sql
-│   │   │   ├── create_mart_fact.sql
-│   │   │   └── create_mart_reference.sql
-│   │   └── procedures/
-│   │       ├── mart_sp_load_dim_date.sql
-│   │       ├── mart_sp_load_dim_account.sql
-│   │       └── ...
-│   ├── orchestration/
-│   │   └── orchestration_sp_run_full_load.sql
-│   └── views/
-│       └── v_pl_monthly.sql
 ├── LICENSE
 └── requirements.txt
 ```
