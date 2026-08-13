@@ -1,0 +1,2 @@
+# .csx sind Tabular-Editor-Skripte für Dax; ohne diese Zeile weist GitHub das Repo als C# aus.
+*.csx linguist-detectable=false
