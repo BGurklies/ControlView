@@ -273,6 +273,7 @@ ControlView/
 | **Python** | Rohdatengenerierung  |
 | **Power BI Desktop** | Semantic Model, DAX Measures, Dashboard |
 | **Tabular Editor 2** | Bulk-Erstellung von DAX Measures via C# Script           |
+| **VS Code**          | Entwicklungsumgebung für Projektdateien und Skripte      |
 | **Git / GitHub** | Versionierung |
 
 ---
